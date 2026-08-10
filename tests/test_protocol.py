@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from humain_api import Receipt, Resolver, ValidationError, canonical_bytes, content_hash
+from humain_api import Receipt, Resolver, ValidationError, canonical_bytes, content_hash, humanize, unwrap
 from humain_api.crypto import Ed25519Signer, Ed25519Verifier
 from humain_api.http_service import make_server
 
@@ -88,6 +88,24 @@ class ProtocolTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join(timeout=2)
+
+    def test_memetic_layer_preserves_state_and_unwraps_exact_response(self):
+        response = {
+            "resolution_state": "denied",
+            "provenance": {"parent": "sha256:example"},
+            "error": "no matching active capability",
+        }
+        surface = humanize(response)
+        self.assertIn("knocked", surface["surface_text"])
+        self.assertEqual(surface["resolution_state"], "denied")
+        self.assertFalse(surface["details_available"])
+        self.assertIs(unwrap(surface), response)
+
+    def test_memetic_layer_does_not_turn_unavailable_into_reassurance(self):
+        surface = humanize({"resolution_state": "unavailable", "provenance": {}})
+        self.assertIn("asleep", surface["surface_text"])
+        self.assertEqual(surface["resolution_state"], "unavailable")
+        self.assertFalse(surface["details_available"])
 
     def test_demo_signature_fails_closed_by_default(self):
         request = dict(self.request, signature={"algorithm": "demo", "key_ref": "x", "value": "demo:unsigned"})
