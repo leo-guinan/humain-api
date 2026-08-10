@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from humain_api import Receipt, Resolver, ValidationError, canonical_bytes, content_hash, humanize, unwrap
 from humain_api.crypto import Ed25519Signer, Ed25519Verifier
 from humain_api.http_service import make_server
+from humain_api.voice_service import VoiceToolService
 
 
 class ProtocolTests(unittest.TestCase):
@@ -106,6 +107,23 @@ class ProtocolTests(unittest.TestCase):
         self.assertIn("asleep", surface["surface_text"])
         self.assertEqual(surface["resolution_state"], "unavailable")
         self.assertFalse(surface["details_available"])
+
+    def test_voice_tool_is_session_and_pointer_scoped(self):
+        resolver = Resolver(publisher="did:key:publisher", verify_signature=lambda signature: True)
+        service = VoiceToolService(resolver, {self.request["pointer"]: {"message": "voice context"}})
+        service.register({
+            "schema": "humain.voice.session.v1",
+            "session_id": "call-session:test",
+            "pointer": self.request["pointer"],
+            "allowed_actions": ["resolve"],
+            "capability_expires_at": "2030-01-01T00:00:00Z",
+            "request": self.request,
+        })
+        response = service.resolve_context({"name": "resolve_context", "arguments": {"session_id": "call-session:test", "pointer": self.request["pointer"], "question": "What is here?"}})
+        self.assertEqual(response["underlying_response"]["payload"]["message"], "voice context")
+        self.assertEqual(response["memetic"]["resolution_state"], "trusted_projection")
+        with self.assertRaises(ValidationError):
+            service.resolve_context({"name": "resolve_context", "arguments": {"session_id": "call-session:test", "pointer": "https://elsewhere.example/", "question": "escape"}})
 
     def test_demo_signature_fails_closed_by_default(self):
         request = dict(self.request, signature={"algorithm": "demo", "key_ref": "x", "value": "demo:unsigned"})
