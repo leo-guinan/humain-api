@@ -1,0 +1,10 @@
+{
+  "schema": "humain.receipt.v1",
+  "receipt_id": "receipt:example-1",
+  "pointer": "https://example.com/article/123",
+  "promise": "Resolve a capability-authorized contextual projection for the pointer.",
+  "result": null,
+  "status": "open",
+  "evidence": [],
+  "visibility": "private"
+}
