@@ -10,7 +10,7 @@
     "window_id": {"type": "string"},
     "source_label": {"type": "string"},
     "event_count": {"type": "integer", "minimum": 1},
-    "event_types": {"type": "array", "items": {"type": "string"}},
+    "event_type_runs": {"type": "array", "items": {"type": "array", "prefixItems": [{"type": "string"}, {"type": "integer", "minimum": 1}], "minItems": 2, "maxItems": 2}},
     "event_type_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "transitions": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "transition_entropy_bits": {"type": "number", "minimum": 0},
@@ -21,7 +21,8 @@
     "capsule_bytes": {"type": "integer", "minimum": 1},
     "compression_ratio": {"type": "number", "exclusiveMinimum": 0},
     "compression_status": {"enum": ["compressed", "expanded"]},
-    "nonce_hashes": {"type": "array", "items": {"type": "string"}},
+    "nonce_count": {"type": "integer", "minimum": 0},
+    "nonce_set_hash": {"type": "string"},
     "provenance": {"type": "object", "required": ["method", "falsifier"]}
   },
   "additionalProperties": true

@@ -20,7 +20,7 @@ class TrajectoryTests(unittest.TestCase):
         first = compress_events(BASE, window_id="w1").to_dict()
         second = compress_events(BASE, window_id="w1").to_dict()
         self.assertEqual(first, second)
-        self.assertEqual(first["event_types"], ["resolve.request", "resolve.response", "memetic.render", "receipt.close"])
+        self.assertEqual(first["event_type_runs"], [["resolve.request", 1], ["resolve.response", 1], ["memetic.render", 1], ["receipt.close", 1]])
         self.assertGreater(first["compression_ratio"], 0)
         self.assertIn(first["compression_status"], {"compressed", "expanded"})
         self.assertTrue(first["provenance"]["falsifier"])
@@ -46,6 +46,16 @@ class TrajectoryTests(unittest.TestCase):
         comparison = compare_trajectories(compress_events(current, window_id="w2"), compress_events(BASE, window_id="w1"))
         self.assertIn(comparison["classification"], {"novel_branch", "drift"})
         self.assertNotEqual(comparison["classification"], "continuation")
+
+    def test_long_repeated_window_compresses(self):
+        events = []
+        for index in range(40):
+            events.append({"event_type": "resolve.request", "occurred_at": f"2026-08-10T14:{index:02d}:00Z", "nonce": f"n{index}"})
+        for index in range(40, 80):
+            events.append({"event_type": "resolve.response", "occurred_at": f"2026-08-10T15:{index - 40:02d}:00Z", "nonce": f"n{index}"})
+        capsule = compress_events(events, window_id="long")
+        self.assertEqual(capsule.value["compression_status"], "compressed")
+        self.assertLess(len(capsule.value["event_type_runs"]), capsule.value["event_count"])
 
     def test_cold_start_is_insufficient_pattern(self):
         short = compress_events(BASE[:2], window_id="short")

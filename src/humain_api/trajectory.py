@@ -94,6 +94,20 @@ def _normalize_event(event: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def _runs(values: list[str]) -> list[list[Any]]:
+    result: list[list[Any]] = []
+    for value in values:
+        if result and result[-1][0] == value:
+            result[-1][1] += 1
+        else:
+            result.append([value, 1])
+    return result
+
+
+def _expand_runs(runs: list[list[Any]]) -> list[str]:
+    return [value for value, count in runs for _ in range(int(count))]
+
+
 @dataclass(frozen=True)
 class TrajectoryCapsule:
     value: dict[str, Any]
@@ -113,25 +127,27 @@ def compress_events(events: list[dict[str, Any]], *, window_id: str, source_labe
         delta = (_parse_time(right["occurred_at"]) - _parse_time(left["occurred_at"])).total_seconds()
         timing.append(_bucket_seconds(max(0.0, delta)))
     source_bytes = sum(len(_canonical(event)) for event in events)
-    source_hashes = [_hash(event) for event in events]
+    source_hash = _hash(events)
+    nonce_hashes = sorted({event["nonce_hash"] for event in normalized if "nonce_hash" in event})
     capsule = {
         "schema": SCHEMA,
-        "capsule_id": "capsule:" + hashlib.sha256(_canonical({"window_id": window_id, "source_hashes": source_hashes})).hexdigest()[:24],
+        "capsule_id": "capsule:" + hashlib.sha256(_canonical({"window_id": window_id, "source_hash": source_hash})).hexdigest()[:24],
         "window_id": window_id,
         "source_label": source_label,
         "event_count": len(normalized),
-        "event_types": sequence,
+        "event_type_runs": _runs(sequence),
         "event_type_counts": dict(sorted(Counter(sequence).items())),
         "transitions": dict(sorted(Counter(transitions).items())),
         "transition_entropy_bits": round(_entropy(transitions), 6),
         "timing_buckets": dict(sorted(Counter(timing).items())),
         "path_digest": _hash(normalized),
-        "source_hash": _hash(source_hashes),
+        "source_hash": source_hash,
         "source_event_bytes": source_bytes,
         "capsule_bytes": 0,
         "compression_ratio": 0.0,
         "compression_status": "pending",
-        "nonce_hashes": sorted({event["nonce_hash"] for event in normalized if "nonce_hash" in event}),
+        "nonce_count": len(nonce_hashes),
+        "nonce_set_hash": _hash(nonce_hashes),
         "provenance": {"method": "deterministic-trajectory-compressor", "falsifier": "a known normal path must not be classified as drift solely because its payload changed"},
     }
     capsule["capsule_bytes"] = len(_canonical(capsule))
@@ -146,9 +162,9 @@ def compare_trajectories(current: TrajectoryCapsule, baseline: TrajectoryCapsule
         return {"schema": "humain.trajectory.comparison.v1", "classification": "insufficient_pattern", "novelty": None, "reasons": ["minimum event count is three"], "baseline_capsule": right["capsule_id"], "current_capsule": left["capsule_id"]}
     type_distance = 1 - _jaccard(set(left["event_type_counts"]), set(right["event_type_counts"]))
     transition_distance = 1 - _jaccard(set(left["transitions"]), set(right["transitions"]))
-    sequence_distance = _sequence_distance(left["event_types"], right["event_types"])
+    sequence_distance = _sequence_distance(_expand_runs(left["event_type_runs"]), _expand_runs(right["event_type_runs"]))
     novelty = round((type_distance + transition_distance + sequence_distance) / 3, 6)
-    nonce_overlap = bool(set(left["nonce_hashes"]) & set(right["nonce_hashes"]))
+    nonce_overlap = left["nonce_set_hash"] == right["nonce_set_hash"] and left["nonce_count"] > 0
     if nonce_overlap and left["capsule_id"] != right["capsule_id"] and novelty <= 0.2:
         classification = "replay_suspect"
     elif novelty <= 0.2:
