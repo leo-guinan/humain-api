@@ -15,6 +15,8 @@ The first reliability target should be a bounded private pilot:
 - no payments, custody, private corpus, or automatic actions;
 - durable receipts and explicit rollback.
 
+The long-term control plane is trajectory compression: raw events are temporary substrate; movement patterns are compressed, compared, and expanded only on anomaly, uncertainty, dispute, audit, or explicit request. Trajectory is a security signal and escalation input, not a replacement for cryptographic authorization.
+
 Do not start with multi-region or a message bus. That would distribute the uncertainty before removing it.
 
 ## P0 — required before a private pilot
