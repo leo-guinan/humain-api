@@ -60,6 +60,7 @@ The implementation uses only the Python standard library. The test result is a l
 - [`docs/PROTOCOL.md`](docs/PROTOCOL.md) — normative v0.1 protocol draft.
 - [`docs/SECURITY.md`](docs/SECURITY.md) — threat model and boundaries.
 - [`docs/CLIENTS.md`](docs/CLIENTS.md) — browser extension, agent resolver, and voice client contracts.
+- [`docs/ADAPTER-PATTERNS.md`](docs/ADAPTER-PATTERNS.md) — reusable browser and ElevenLabs voice adapter patterns.
 - [`schemas/`](schemas/) — machine-readable envelope schemas.
 - [`examples/`](examples/) — valid example envelopes.
 - [`src/humain_api/`](src/humain_api/) — small reference validator/resolver substrate.

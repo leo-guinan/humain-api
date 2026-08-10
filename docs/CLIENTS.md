@@ -12,6 +12,8 @@ The extension is a human presentation client. It can:
 
 The extension must not treat installation as proof of a human identity, connect a wallet by default, or hide the original page without a visible restoration path.
 
+See `docs/ADAPTER-PATTERNS.md`, Pattern A.
+
 ## Agent resolver
 
 An agent should receive structured messages directly:
@@ -26,4 +28,5 @@ It should not need to render a browser page to discover the graph. It must prese
 
 A voice client is another resolver client. It may render the same structured context conversationally. It should cite the pointer and provenance used, ask for explicit authorization before actions, and record an action receipt when an action is actually attempted.
 
+The detailed ElevenLabs pattern is [`ADAPTER-PATTERNS.md`](ADAPTER-PATTERNS.md#pattern-b-elevenlabs-phone-agent-as-voice-resolver).
 Voice is not a second source of truth. It is a different representation of the same graph.
