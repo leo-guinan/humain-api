@@ -1,0 +1,6 @@
+[
+  {"event_type": "resolve.request", "occurred_at": "2026-08-10T12:00:00Z", "pointer_class": "public-web", "state": "unknown", "action": "resolve", "scope": "public", "nonce": "trajectory-demo-1", "payload": {"pointer": "story.markets"}},
+  {"event_type": "resolve.response", "occurred_at": "2026-08-10T12:00:03Z", "pointer_class": "public-web", "state": "public_only", "action": "resolve", "scope": "public", "nonce": "trajectory-demo-1", "payload": {"resolution_state": "public_only"}},
+  {"event_type": "memetic.render", "occurred_at": "2026-08-10T12:00:04Z", "pointer_class": "public-web", "state": "public_only", "action": "render", "scope": "human", "payload": {"profile": "marvin.bodega-cat.v1"}},
+  {"event_type": "receipt.close", "occurred_at": "2026-08-10T12:01:00Z", "pointer_class": "public-web", "state": "public_only", "action": "record", "scope": "audit", "payload": {"result": "shown"}}
+]

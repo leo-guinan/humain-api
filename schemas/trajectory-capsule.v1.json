@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildinpublicuniversity.com/humain-api/schemas/trajectory-capsule.v1.json",
+  "title": "HumAIn Trajectory Capsule v1",
+  "type": "object",
+  "required": ["schema", "capsule_id", "window_id", "event_count", "event_types", "transitions", "path_digest", "source_hash", "compression_ratio", "provenance"],
+  "properties": {
+    "schema": {"const": "humain.trajectory.capsule.v1"},
+    "capsule_id": {"type": "string"},
+    "window_id": {"type": "string"},
+    "source_label": {"type": "string"},
+    "event_count": {"type": "integer", "minimum": 1},
+    "event_types": {"type": "array", "items": {"type": "string"}},
+    "event_type_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "transitions": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "transition_entropy_bits": {"type": "number", "minimum": 0},
+    "timing_buckets": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "path_digest": {"type": "string"},
+    "source_hash": {"type": "string"},
+    "source_event_bytes": {"type": "integer", "minimum": 1},
+    "capsule_bytes": {"type": "integer", "minimum": 1},
+    "compression_ratio": {"type": "number", "exclusiveMinimum": 0},
+    "compression_status": {"enum": ["compressed", "expanded"]},
+    "nonce_hashes": {"type": "array", "items": {"type": "string"}},
+    "provenance": {"type": "object", "required": ["method", "falsifier"]}
+  },
+  "additionalProperties": true
+}
