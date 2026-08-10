@@ -1,11 +1,16 @@
+import json
 import sys
+import threading
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from humain_api import Receipt, Resolver, ValidationError, canonical_bytes, content_hash
+from humain_api.crypto import Ed25519Signer, Ed25519Verifier
+from humain_api.http_service import make_server
 
 
 class ProtocolTests(unittest.TestCase):
@@ -59,6 +64,30 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(receipt.status, "open")
         self.assertEqual(closed.status, "closed")
         with self.assertRaises(ValidationError): closed.close("overwrite")
+
+    def test_signed_ed25519_request_and_http_resolution(self):
+        signer = Ed25519Signer.generate("did:key:agent")
+        unsigned = dict(self.request)
+        unsigned.pop("signature")
+        unsigned["nonce"] = "signed-http-nonce"
+        unsigned["signature"] = signer.sign({k: unsigned[k] for k in unsigned})
+        resolver = Resolver(
+            publisher="did:key:publisher",
+            verify_signature=Ed25519Verifier({"did:key:agent": signer.public_key_b64}),
+        )
+        server = make_server("127.0.0.1", 0, resolver, {self.request["pointer"]: {"message": "resolved"}})
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            body = json.dumps(unsigned).encode()
+            request = Request(f"http://127.0.0.1:{server.server_address[1]}/v1/resolve", data=body, headers={"Content-Type": "application/json"})
+            response = json.loads(urlopen(request, timeout=2).read())
+            self.assertEqual(response["resolution_state"], "trusted_projection")
+            self.assertEqual(response["payload"]["message"], "resolved")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
 
     def test_demo_signature_fails_closed_by_default(self):
         request = dict(self.request, signature={"algorithm": "demo", "key_ref": "x", "value": "demo:unsigned"})

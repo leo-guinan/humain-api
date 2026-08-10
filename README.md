@@ -28,6 +28,8 @@ Implemented:
 
 - versioned `RESOLVE` request and response envelopes;
 - canonical JSON bytes for hashing/signing adapters;
+- Ed25519 request signing and verification adapter;
+- local HTTP `/health` and `/v1/resolve` transport;
 - capability matching with expiry, audience, pointer, action, and revocation checks;
 - append-only parent/hash linkage validation;
 - explicit open/closed receipt shape;

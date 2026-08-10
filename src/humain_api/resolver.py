@@ -23,7 +23,7 @@ class Resolver:
         if nonce_key in self._seen_nonces:
             raise ValidationError("replayed nonce")
         self._seen_nonces.add(nonce_key)
-        if not self.verify_signature(request.signature):
+        if not verify_request_signature(self.verify_signature, request, request.signature):
             raise ValidationError("request signature was not verified")
         now = datetime.now(timezone.utc)
         allowed = any(
@@ -56,6 +56,15 @@ class Resolver:
             "signature": {"algorithm": "demo", "key_ref": self.publisher, "value": "demo:unsigned"},
         }
         return response
+
+
+def verify_request_signature(verifier: Callable[..., bool], request: ResolutionRequest, signature: dict[str, Any]) -> bool:
+    value = request_data_without_signature(request)
+    try:
+        return bool(verifier(value, signature))
+    except TypeError:
+        # Backward-compatible test hook; real verifiers should inspect the signed value.
+        return bool(verifier(signature))
 
 
 def request_data_without_signature(request: ResolutionRequest) -> dict[str, Any]:
