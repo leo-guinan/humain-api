@@ -62,6 +62,7 @@ The implementation uses only the Python standard library. The test result is a l
 - [`docs/CLIENTS.md`](docs/CLIENTS.md) — browser extension, agent resolver, and voice client contracts.
 - [`docs/ADAPTER-PATTERNS.md`](docs/ADAPTER-PATTERNS.md) — reusable browser and ElevenLabs voice adapter patterns.
 - [`docs/MEMETIC-LAYER.md`](docs/MEMETIC-LAYER.md) — persona projections that compress protocol state without changing evidence.
+- [`docs/RELIABILITY-ROADMAP.md`](docs/RELIABILITY-ROADMAP.md) — infrastructure audit, pilot gates, and production hardening order.
 - [`schemas/`](schemas/) — machine-readable envelope schemas.
 - [`examples/`](examples/) — valid example envelopes.
 - [`src/humain_api/`](src/humain_api/) — small reference validator/resolver substrate.
