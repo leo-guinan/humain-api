@@ -65,6 +65,7 @@ The implementation uses only the Python standard library. The test result is a l
 - [`docs/RELIABILITY-ROADMAP.md`](docs/RELIABILITY-ROADMAP.md) — infrastructure audit, pilot gates, and production hardening order.
 - [`docs/TRAJECTORY-COMPRESSION.md`](docs/TRAJECTORY-COMPRESSION.md) — expand/compress/measure loop for movement-based security signals.
 - [`docs/OPENHOME-DEMO.md`](docs/OPENHOME-DEMO.md) — local browser-to-OpenHome website-context demo runbook.
+- [`docs/PROXIMITY-PAIRING.md`](docs/PROXIMITY-PAIRING.md) — BLE presence, pairing, challenge, RSSI, and activation policy.
 - [`schemas/`](schemas/) — machine-readable envelope schemas.
 - [`examples/`](examples/) — valid example envelopes.
 - [`src/humain_api/`](src/humain_api/) — small reference validator/resolver substrate.
