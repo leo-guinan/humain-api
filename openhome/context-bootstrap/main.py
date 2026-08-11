@@ -6,7 +6,7 @@ RELAY_KEY = "humain_rendezvous_url"
 TOKEN_KEY = "humain_rendezvous_auth_token"
 KEY_REF_KEY = "humain_openhome_key_ref"
 SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
-OBSERVER_NAME = "HumAIn Proximity Observer"
+OBSERVER_NAME = "HumAIn Proximity Local"
 
 
 class HumAInContextBootstrapCapability(MatchingCapability):
