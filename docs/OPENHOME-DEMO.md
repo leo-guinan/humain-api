@@ -42,7 +42,21 @@ curl -X POST http://127.0.0.1:8790/v1/openhome/arm \\
   -d '{"session_id":"desk-demo","ttl_seconds":300}'
 ```
 
-The proximity broker must post a fresh `humain.proximity.presence.v1` receipt before the pointer event is accepted:
+The local proximity runner supports a complete simulator path:
+
+```bash
+PYTHONPATH=src python3 scripts/run_proximity.py --simulator
+```
+
+Real discovery is deliberately candidate-only until a device-specific signed GATT challenge is implemented:
+
+```bash
+PYTHONPATH=src python3 scripts/run_proximity.py \\
+  --service-uuid YOUR_PAIRED_SERVICE_UUID
+```
+
+No BLE address is persisted or treated as identity. A candidate cannot become `near_verified` from RSSI alone.
+A proximity broker must post a fresh `humain.proximity.presence.v1` receipt before the pointer event is accepted:
 
 ```text
 POST http://127.0.0.1:8790/v1/openhome/presence
