@@ -5,14 +5,34 @@ bounded observation for pending HumAIn rendezvous sessions.
 
 ## Runtime configuration
 
-Configure these values in the DevKit runtime, not in the ZIP:
+Configure these values in the OpenHome Ability dashboard under **Ability Behavior → API Keys**, then set their values under **Settings → API Keys → Third-party Keys**:
 
 ```text
-HUMAIN_RENDEZVOUS_URL=https://rendezvous.metaspn.network
-HUMAIN_RENDEZVOUS_AUTH_TOKEN=[configured as a DevKit runtime secret]
-HUMAIN_OPENHOME_KEY_REF=openhome:device-name
-HUMAIN_BLE_SERVICE_UUID=12345678-1234-5678-1234-56789abcdef0
+key name: humain_rendezvous_url
+value: https://rendezvous.metaspn.network
+provider/reference URL: https://rendezvous.metaspn.network
+
+key name: humain_rendezvous_auth_token
+value: [the relay bearer token]
+provider/reference URL: https://rendezvous.metaspn.network
+
+key name: humain_openhome_key_ref
+value: openhome:marvin-bodega
+provider/reference URL: https://rendezvous.metaspn.network
 ```
+
+The provider/reference URL is required by the OpenHome dashboard metadata. The
+key value itself does not need to be a URL. The BLE service UUID is fixed public
+configuration and is compiled into the ability as:
+
+```text
+12345678-1234-5678-1234-56789abcdef0
+```
+
+Mark the three `humain_*` keys as required for this Ability. The Ability reads
+them at runtime through `get_api_keys()` and passes bounded values to the
+DevKit-side scanner; it does not read shell environment variables in the
+standard Ability runtime.
 
 The short-lived `observation_key_b64` is issued by the rendezvous service and
 returned only in the pending rendezvous response. It is not persisted by the

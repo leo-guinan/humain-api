@@ -20,11 +20,15 @@ class ProximityObserverCapability(MatchingCapability):
 
     async def observe_loop(self):
         try:
+            relay_url = self.capability_worker.get_api_keys("humain_rendezvous_url") or ""
+            auth_token = self.capability_worker.get_api_keys("humain_rendezvous_auth_token") or ""
+            key_ref = self.capability_worker.get_api_keys("humain_openhome_key_ref") or "openhome:marvin-bodega"
+            service_uuid = "12345678-1234-5678-1234-56789abcdef0"
             while True:
                 try:
                     result = await self.capability_worker.send_devkit_capability_action(
                         function_name="scan_pending",
-                        args=[],
+                        args=[relay_url, auth_token, key_ref, service_uuid],
                         timeout=10,
                     )
                     if isinstance(result, dict) and result.get("success"):
