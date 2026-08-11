@@ -111,7 +111,7 @@ class OpenHomeBridge:
         if action == "receipt":
             return self.rendezvous.submit_shared_receipt(rendezvous_id=rendezvous_id, role=str(data.get("role", "")), receipt_hash=str(data.get("receipt_hash", "")), signature=data.get("signature") or {})
         if action == "observation":
-            return self.rendezvous.submit_observation(rendezvous_id=rendezvous_id, scanner=str(data.get("scanner", "")), observed_at=str(data.get("observed_at", "")), service_uuid=str(data.get("service_uuid", "")), advertisement_commitment=str(data.get("advertisement_commitment", "")), rssi_bucket=data.get("rssi_bucket"), sample_count=int(data.get("sample_count", 1)))
+            return self.rendezvous.submit_observation(rendezvous_id=rendezvous_id, scanner=str(data.get("scanner", "")), observed_at=str(data.get("observed_at", "")), service_uuid=str(data.get("service_uuid", "")), advertisement_commitment=str(data.get("advertisement_commitment", "")), commitment_quality=str(data.get("commitment_quality", "payload")), rssi_bucket=data.get("rssi_bucket"), sample_count=int(data.get("sample_count", 1)))
         if action == "bind":
             return self.rendezvous.bind(rendezvous_id=rendezvous_id, binding_code=str(data.get("binding_code", "")))
         if action == "grant":

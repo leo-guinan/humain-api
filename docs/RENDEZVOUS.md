@@ -78,6 +78,21 @@ claims, pings, and the shared receipt.
 The browser never submits an OpenHome public key to `/start`. If the bridge has
 no provisioned OpenHome identity, `/start` returns `rendezvous_not_configured`.
 
+The laptop scanner can submit a bounded observation when the rendezvous service
+has provisioned the same short-lived commitment key to both scanner sides:
+
+```bash
+export HUMAIN_RENDEZVOUS_ID=rv_...
+export HUMAIN_OBSERVATION_KEY_B64='...short-lived-key...'
+PYTHONPATH=src python3 scripts/run_proximity.py \
+  --service-uuid 12345678-1234-5678-1234-56789abcdef0
+```
+
+The key is not printed by the runner. If the advertisement has no
+manufacturer-data or service-data payload, the observation is marked
+`uuid_only` and cannot promote a rendezvous; a shared service UUID is not a
+device identity.
+
 
 The protocol challenges receipt hashes, not semantic questions about a user's
 recent behavior. A receipt can prove both parties know the same protocol event

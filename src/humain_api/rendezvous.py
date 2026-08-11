@@ -212,12 +212,14 @@ class RendezvousBroker:
         session.shared_receipt_hash = receipt_hash
         return self.status(rendezvous_id)
 
-    def submit_observation(self, *, rendezvous_id: str, scanner: str, observed_at: str, service_uuid: str, advertisement_commitment: str, rssi_bucket: int | None = None, sample_count: int = 1) -> dict[str, Any]:
+    def submit_observation(self, *, rendezvous_id: str, scanner: str, observed_at: str, service_uuid: str, advertisement_commitment: str, commitment_quality: str = "payload", rssi_bucket: int | None = None, sample_count: int = 1) -> dict[str, Any]:
         session = self._session(rendezvous_id)
         if scanner not in {"browser", "openhome"}:
             raise PermissionError("unknown observation scanner")
         if not service_uuid or len(service_uuid) > 128 or not advertisement_commitment or len(advertisement_commitment) > 256:
             raise ValueError("observation requires bounded service and advertisement commitment")
+        if commitment_quality not in {"payload", "uuid_only"}:
+            raise ValueError("invalid commitment quality")
         observed = _parse(observed_at)
         age = abs((self.now() - observed).total_seconds())
         if age > self.ttl_seconds or age > 10:
@@ -229,11 +231,13 @@ class RendezvousBroker:
         if prior and prior.get("advertisement_commitment") == advertisement_commitment and prior.get("observed_at") == observed_at:
             self._tripwire(session, "replayed_observation", scanner)
             raise PermissionError("replayed observation")
-        session.observations[scanner] = {"scanner": scanner, "observed_at": _iso(observed), "service_uuid": service_uuid, "advertisement_commitment": advertisement_commitment, "rssi_bucket": rssi_bucket, "sample_count": max(1, min(int(sample_count), 20))}
+        session.observations[scanner] = {"scanner": scanner, "observed_at": _iso(observed), "service_uuid": service_uuid, "advertisement_commitment": advertisement_commitment, "commitment_quality": commitment_quality, "rssi_bucket": rssi_bucket, "sample_count": max(1, min(int(sample_count), 20))}
         browser = session.observations.get("browser")
         openhome = session.observations.get("openhome")
         if browser and openhome:
-            if browser["service_uuid"] != openhome["service_uuid"] or not hmac.compare_digest(browser["advertisement_commitment"], openhome["advertisement_commitment"]):
+            if browser["commitment_quality"] != "payload" or openhome["commitment_quality"] != "payload":
+                self._tripwire(session, "weak_observation_material", scanner)
+            elif browser["service_uuid"] != openhome["service_uuid"] or not hmac.compare_digest(browser["advertisement_commitment"], openhome["advertisement_commitment"]):
                 self._tripwire(session, "scanner_observation_mismatch", scanner)
             elif abs((_parse(browser["observed_at"]) - _parse(openhome["observed_at"])).total_seconds()) > 5:
                 self._tripwire(session, "scanner_timing_mismatch", scanner)
