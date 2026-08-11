@@ -41,7 +41,7 @@ class OpenHomeBridgeTests(unittest.TestCase):
         self.assertEqual(envelope["resolution_state"], "public_only")
         self.assertFalse(envelope["permissions"]["private_context"])
         self.assertEqual(envelope["permissions"]["actions"], [])
-        self.assertIn("AI-generated", envelope["speech_text"])
+        self.assertEqual(envelope["speech_text"], "Welcome to story markets.")
         self.assertIn("underlying_response", envelope["receipt"])
 
     def test_presence_is_required_before_pointer_flow(self):

@@ -136,7 +136,7 @@ class OpenHomeBridge:
             "delivery_id": "speech:" + event_id,
             "session_id": self.arm_state.session_id,
             "pointer": pointer,
-            "speech_text": f"You have arrived at {parsed.hostname}. {memetic['surface_text']} This is an AI-generated public-context demo. Say show the receipt if you want the details.",
+            "speech_text": "Welcome to story markets." if parsed.hostname in {"story.markets", "www.story.markets"} else f"You have arrived at {parsed.hostname}. {memetic['surface_text']} This is an AI-generated public-context demo. Say show the receipt if you want the details.",
             "resolution_state": response["resolution_state"],
             "receipt": {"response_message_id": response["message_id"], "provenance": response["provenance"], "underlying_response": response},
             "permissions": {"speech": True, "private_context": False, "actions": []},
