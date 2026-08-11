@@ -94,7 +94,9 @@ The envelope carries the underlying response and provenance for a receipt view. 
 
 ## OpenHome setup
 
-The ability package is under `openhome/context-speaker/`. It is designed for a local OpenHome ability client and is not deployed by this repository.
+The reusable presence capability package is available at `openhome/proximity-presence.zip`. Other OpenHome abilities can call its `get_presence` DevKit function without implementing BLE or handling paired identifiers.
+
+The speech consumer ability remains under `openhome/context-speaker/`; it polls the bridge's one-shot speech queue.
 
 Before deployment:
 
