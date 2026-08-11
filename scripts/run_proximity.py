@@ -14,7 +14,7 @@ import json
 import os
 from urllib.request import Request, urlopen
 
-from humain_api.ble_adapter import BleakDiscoveryAdapter
+from humain_api.ble_adapter import BleakDiscoveryAdapter, OPENHOME_DEVKIT_SERVICE_UUID
 from humain_api.crypto import Ed25519Signer
 from humain_api.proximity import Pairing, PresenceBroker, sign_challenge
 
@@ -74,9 +74,9 @@ async def real_scan(bridge_url: str, alias: str, service_uuid: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--bridge-url", default="http://127.0.0.1:8790")
-    parser.add_argument("--alias", default="demo-phone")
+    parser.add_argument("--alias", default="openhome-speaker")
     parser.add_argument("--simulator", action="store_true")
-    parser.add_argument("--service-uuid", default=os.environ.get("HUMAIN_BLE_SERVICE_UUID", ""))
+    parser.add_argument("--service-uuid", default=os.environ.get("HUMAIN_BLE_SERVICE_UUID", OPENHOME_DEVKIT_SERVICE_UUID))
     args = parser.parse_args()
     if args.simulator:
         result = simulator(args.bridge_url, args.alias)

@@ -1,6 +1,6 @@
 """Small, transport-neutral HumAIn API reference substrate."""
 
-from .ble_adapter import BleCandidate, BleakDiscoveryAdapter
+from .ble_adapter import BleCandidate, BleakDiscoveryAdapter, OPENHOME_DEVKIT_SERVICE_UUID
 from .canonical import canonical_bytes, content_hash
 from .crypto import Ed25519Signer, Ed25519Verifier
 from .models import Capability, ResolutionRequest, ValidationError

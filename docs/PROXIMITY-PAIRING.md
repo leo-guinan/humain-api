@@ -176,7 +176,28 @@ Do not assume the standard cloud Ability runtime can scan the Mac's Bluetooth ad
 
 If OpenHome runs on another device, `127.0.0.1` refers to that device, not the Mac. Use an explicitly paired LAN address or Local Link tunnel. Do not expose the bridge by binding to all interfaces without authentication.
 
-## Trajectory integration
+## OpenHome DevKit BLE result
+
+The physical DevKit was observed advertising:
+
+```text
+service UUID: 12345678-1234-5678-1234-56789abcdef0
+```
+
+A GATT connection succeeded. The service exposes the stock setup protocol:
+
+| Characteristic suffix | Properties | Stock function |
+|---|---|---|
+| `abcdef1` | read/write/notify | Wi-Fi scan |
+| `abcdef2` | write/notify/indicate | Wi-Fi credentials |
+| `abcdef3` | read/notify | Wi-Fi status |
+| `abcdef4` | read/write/notify | OpenHome API-key setup |
+| `abcdef5` | read/write/notify | heartbeat/link maintenance |
+
+This is not a runtime signed-presence protocol. The API-key characteristic is a credential-setup channel, not a nonce-signing challenge. The broker therefore recognizes this device only as `candidate_near`; it will not promote it to `near_verified` or activate speech from this advertisement alone.
+
+To complete cryptographic recognition, a separate paired device or firmware capability must expose a challenge-response characteristic with a registered public key. Do not write credentials to the API-key characteristic from the proximity runner.
+
 
 Presence is another movement stream, not a new trust system. Record only:
 

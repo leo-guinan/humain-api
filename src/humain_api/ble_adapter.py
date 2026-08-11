@@ -10,6 +10,8 @@ from dataclasses import dataclass
 import asyncio
 from typing import Any, Callable
 
+OPENHOME_DEVKIT_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
+
 
 @dataclass(frozen=True)
 class BleCandidate:
