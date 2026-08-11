@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humain.local/schemas/proximity-presence.v1.json",
+  "title": "HumAIn proximity presence envelope",
+  "type": "object",
+  "required": ["schema", "presence_state", "paired_device", "observation_count", "verified_observation_count", "rssi_median", "challenge_verified", "flow_eligible", "observed_at", "provenance"],
+  "properties": {
+    "schema": {"const": "humain.proximity.presence.v1"},
+    "presence_state": {"enum": ["absent", "candidate_near", "near_verified"]},
+    "paired_device": {"type": "string", "minLength": 1},
+    "observation_count": {"type": "integer", "minimum": 0},
+    "verified_observation_count": {"type": "integer", "minimum": 0},
+    "rssi_median": {"type": ["number", "null"]},
+    "window_seconds": {"type": "integer", "minimum": 1},
+    "challenge_verified": {"type": "boolean"},
+    "flow_eligible": {"type": "boolean"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "provenance": {
+      "type": "object",
+      "required": ["method", "falsifier"],
+      "properties": {"method": {"type": "string"}, "falsifier": {"type": "string"}},
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

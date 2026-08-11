@@ -66,10 +66,12 @@ class DemoArm:
 
 
 class OpenHomeBridge:
-    def __init__(self, *, max_ttl_seconds: int = 900, debounce_seconds: int = 30):
+    def __init__(self, *, max_ttl_seconds: int = 900, debounce_seconds: int = 30, require_presence: bool = True):
         self.max_ttl_seconds = max_ttl_seconds
         self.debounce_seconds = debounce_seconds
+        self.require_presence = require_presence
         self.arm_state: DemoArm | None = None
+        self.presence: dict[str, Any] | None = None
         self.seen_events: dict[str, datetime] = {}
         self.last_pointer: tuple[str, datetime] | None = None
         self.queue: list[dict[str, Any]] = []
@@ -86,13 +88,30 @@ class OpenHomeBridge:
             self.arm_state.muted = True
         return self.status()
 
+    def update_presence(self, presence: dict[str, Any]) -> dict[str, Any]:
+        if presence.get("schema") != "humain.proximity.presence.v1":
+            raise ValueError("invalid presence schema")
+        try:
+            presence_age = (_now() - datetime.fromisoformat(str(presence["observed_at"]).replace("Z", "+00:00"))).total_seconds()
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("presence observed_at is required")
+        if presence_age > 30 or presence_age < -5:
+            raise PermissionError("presence receipt is stale")
+        if presence.get("presence_state") != "near_verified" or not presence.get("flow_eligible"):
+            self.presence = presence
+            raise PermissionError("proximity is not near_verified")
+        self.presence = presence
+        return self.status()
+
     def status(self) -> dict[str, Any]:
         active = bool(self.arm_state and self.arm_state.active)
-        return {"schema": "humain.openhome.bridge.status.v1", "armed": active, "muted": bool(self.arm_state and self.arm_state.muted), "session_id": self.arm_state.session_id if self.arm_state else None, "expires_at": _iso(self.arm_state.expires_at) if self.arm_state else None, "queued": len(self.queue)}
+        return {"schema": "humain.openhome.bridge.status.v1", "armed": active, "muted": bool(self.arm_state and self.arm_state.muted), "session_id": self.arm_state.session_id if self.arm_state else None, "expires_at": _iso(self.arm_state.expires_at) if self.arm_state else None, "presence_state": (self.presence or {}).get("presence_state", "absent"), "flow_eligible": bool(self.presence and self.presence.get("flow_eligible")), "queued": len(self.queue)}
 
     def submit_event(self, event: dict[str, Any]) -> dict[str, Any]:
         if not self.arm_state or not self.arm_state.active:
             raise PermissionError("desk mode is not armed")
+        if self.require_presence and (not self.presence or self.presence.get("presence_state") != "near_verified" or not self.presence.get("flow_eligible")):
+            raise PermissionError("paired presence is not near_verified")
         required = {"schema", "event_id", "pointer", "occurred_at", "client_id"}
         missing = required - event.keys()
         if missing or event["schema"] != SCHEMA:
@@ -170,6 +189,8 @@ class OpenHomeBridgeHandler(BaseHTTPRequestHandler):
                 self._json(200, self.bridge.arm(data.get("session_id", ""), data.get("ttl_seconds", 300)))
             elif self.path == "/v1/openhome/mute":
                 self._json(200, self.bridge.mute())
+            elif self.path == "/v1/openhome/presence":
+                self._json(200, self.bridge.update_presence(data))
             elif self.path == "/v1/openhome/context-event":
                 self._json(202, self.bridge.submit_event(data))
             else:

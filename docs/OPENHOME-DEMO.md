@@ -7,11 +7,13 @@ Status: local demonstration slice, not production deployment.
 ```text
 BIPU browser extension
   → normalized HTTPS pointer event
-  → loopback HumAIn/OpenHome bridge
-  → public-only resolution envelope
+  → loopback presence + consent gate
+  → public-only HumAIn response
   → Marvin speech envelope
-  → OpenHome local context-speaker ability
+  → OpenHome one-shot delivery
 ```
+
+The bridge now requires a fresh `near_verified` presence receipt in addition to explicit desk-mode arming. Candidate BLE sightings are insufficient.
 
 The extension sends only:
 
@@ -39,6 +41,20 @@ curl -X POST http://127.0.0.1:8790/v1/openhome/arm \\
   -H 'Content-Type: application/json' \\
   -d '{"session_id":"desk-demo","ttl_seconds":300}'
 ```
+
+The proximity broker must post a fresh `humain.proximity.presence.v1` receipt before the pointer event is accepted:
+
+```text
+POST http://127.0.0.1:8790/v1/openhome/presence
+```
+
+The receipt must have `presence_state=near_verified`, `flow_eligible=true`, and an `observed_at` timestamp no older than 30 seconds. Install the optional scanner adapter with:
+
+```bash
+python3 -m pip install -e '.[ble]'
+```
+
+The macOS adapter uses CoreBluetooth through `bleak`. If CoreBluetooth hangs or permissions are unavailable, it fails closed and emits no presence proof.
 
 Load the rebuilt extension on `https://story.markets/`. The bridge queues one speech envelope. The local OpenHome ability polls:
 

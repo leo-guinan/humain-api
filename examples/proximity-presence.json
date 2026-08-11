@@ -1,0 +1,16 @@
+{
+  "schema": "humain.proximity.presence.v1",
+  "presence_state": "near_verified",
+  "paired_device": "leo-phone-demo",
+  "observation_count": 3,
+  "verified_observation_count": 3,
+  "rssi_median": -55,
+  "window_seconds": 5,
+  "challenge_verified": true,
+  "flow_eligible": true,
+  "observed_at": "2026-08-10T11:59:32Z",
+  "provenance": {
+    "method": "signed-proximity-window",
+    "falsifier": "an unsigned, stale, replayed, revoked, or unpaired observation must never become near_verified"
+  }
+}

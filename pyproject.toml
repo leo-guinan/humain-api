@@ -10,6 +10,9 @@ requires-python = ">=3.10"
 dependencies = ["cryptography>=41"]
 license = {text = "MIT"}
 
+[project.optional-dependencies]
+ble = ["bleak>=0.22"]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
