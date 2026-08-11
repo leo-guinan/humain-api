@@ -113,6 +113,37 @@ without turning the server into a private browsing-history oracle.
 - Query strings, fragments, page contents, and private projections are out of scope.
 - A grant cannot be reused after consumption.
 
+## VPS relay
+
+The standalone rendezvous relay is deployed at:
+
+```text
+https://rendezvous.metaspn.network
+```
+
+It owns short-lived rendezvous state and exposes only the bounded rendezvous
+routes. `/v1/rendezvous/pending` and `/v1/rendezvous/observation` require the
+DevKit bearer token stored in the relay's root-only systemd EnvironmentFile.
+The token is not in source, the browser extension, or this repository.
+
+The relay does not hold an OpenHome API key, private signing key, raw BLE data,
+or an arbitrary proxy route. It remains fail-closed until
+`RELAY_OPENHOME_KEY_REF` and `RELAY_OPENHOME_PUBLIC_KEY_B64` are provisioned
+from the enrolled OpenHome identity. The public key may be copied; the private
+key must remain with the signer.
+
+The DevKit observer must receive the corresponding runtime values:
+
+```text
+HUMAIN_RENDEZVOUS_URL=https://rendezvous.metaspn.network
+HUMAIN_RENDEZVOUS_AUTH_TOKEN=<relay secret configured out-of-band>
+HUMAIN_OPENHOME_KEY_REF=<same enrolled key reference>
+```
+
+A healthy relay is transport evidence, not proximity evidence. Matching
+payload commitments remain `corroborated_candidate_near`, never
+`near_verified`.
+
 ## Current implementation
 
 `src/humain_api/rendezvous.py` implements the verifier and state machine.
