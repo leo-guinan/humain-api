@@ -14,7 +14,7 @@ import hmac
 import secrets
 from typing import Any, Callable
 
-from .canonical import canonical_bytes, content_hash
+from .canonical import content_hash
 from .crypto import Ed25519Verifier
 
 SCHEMA = "humain.rendezvous.v1"
@@ -69,15 +69,19 @@ class RendezvousSession:
     binding_verified: bool = False
     used: bool = False
     pings: dict[str, _Ping] = field(default_factory=dict)
+    observations: dict[str, dict[str, Any]] = field(default_factory=dict)
+    corroborated_candidate_near: bool = False
+    tripwires: list[dict[str, Any]] = field(default_factory=list)
 
 
 class RendezvousBroker:
     """Fail-closed verifier for a bounded browser/OpenHome rendezvous."""
 
-    def __init__(self, *, now: Callable[[], datetime] | None = None, ttl_seconds: int = 60, ping_ttl_seconds: int = 10):
+    def __init__(self, *, now: Callable[[], datetime] | None = None, ttl_seconds: int = 60, ping_ttl_seconds: int = 10, require_observation: bool = False):
         self.now = now or (lambda: datetime.now(timezone.utc))
         self.ttl_seconds = ttl_seconds
         self.ping_ttl_seconds = ping_ttl_seconds
+        self.require_observation = require_observation
         self.sessions: dict[str, RendezvousSession] = {}
         self.used_nonces: set[tuple[str, str, str]] = set()
 
@@ -208,6 +212,42 @@ class RendezvousBroker:
         session.shared_receipt_hash = receipt_hash
         return self.status(rendezvous_id)
 
+    def submit_observation(self, *, rendezvous_id: str, scanner: str, observed_at: str, service_uuid: str, advertisement_commitment: str, rssi_bucket: int | None = None, sample_count: int = 1) -> dict[str, Any]:
+        session = self._session(rendezvous_id)
+        if scanner not in {"browser", "openhome"}:
+            raise PermissionError("unknown observation scanner")
+        if not service_uuid or len(service_uuid) > 128 or not advertisement_commitment or len(advertisement_commitment) > 256:
+            raise ValueError("observation requires bounded service and advertisement commitment")
+        observed = _parse(observed_at)
+        age = abs((self.now() - observed).total_seconds())
+        if age > self.ttl_seconds or age > 10:
+            self._tripwire(session, "stale_observation", scanner)
+            raise PermissionError("stale observation")
+        if rssi_bucket is not None and not -127 <= int(rssi_bucket) <= 0:
+            raise ValueError("invalid RSSI bucket")
+        prior = session.observations.get(scanner)
+        if prior and prior.get("advertisement_commitment") == advertisement_commitment and prior.get("observed_at") == observed_at:
+            self._tripwire(session, "replayed_observation", scanner)
+            raise PermissionError("replayed observation")
+        session.observations[scanner] = {"scanner": scanner, "observed_at": _iso(observed), "service_uuid": service_uuid, "advertisement_commitment": advertisement_commitment, "rssi_bucket": rssi_bucket, "sample_count": max(1, min(int(sample_count), 20))}
+        browser = session.observations.get("browser")
+        openhome = session.observations.get("openhome")
+        if browser and openhome:
+            if browser["service_uuid"] != openhome["service_uuid"] or not hmac.compare_digest(browser["advertisement_commitment"], openhome["advertisement_commitment"]):
+                self._tripwire(session, "scanner_observation_mismatch", scanner)
+            elif abs((_parse(browser["observed_at"]) - _parse(openhome["observed_at"])).total_seconds()) > 5:
+                self._tripwire(session, "scanner_timing_mismatch", scanner)
+            elif browser.get("rssi_bucket") is not None and openhome.get("rssi_bucket") is not None and abs(browser["rssi_bucket"] - openhome["rssi_bucket"]) > 35:
+                self._tripwire(session, "rssi_disagreement", scanner)
+            else:
+                session.corroborated_candidate_near = True
+        return self.status(rendezvous_id)
+
+    def _tripwire(self, session: RendezvousSession, reason: str, source: str) -> None:
+        if len(session.tripwires) < 20:
+            session.tripwires.append({"schema": "humain.rendezvous.tripwire.v1", "rendezvous_id": session.rendezvous_id, "severity": "medium", "reason": reason, "source": source, "occurred_at": _iso(self.now()), "action_taken": "quarantined"})
+        session.corroborated_candidate_near = False
+
     def bind(self, *, rendezvous_id: str, binding_code: str) -> dict[str, Any]:
         session = self._session(rendezvous_id)
         digest = hashlib.sha256(binding_code.encode("ascii")).hexdigest()
@@ -226,11 +266,17 @@ class RendezvousBroker:
             "shared_receipt": session.shared_receipt_hash is not None,
             "human_binding": session.binding_verified,
         }
-        if all(requirements.values()):
+        if self.require_observation:
+            requirements["corroborated_candidate_near"] = session.corroborated_candidate_near
+        if session.tripwires:
+            session.state = "quarantined"
+        elif all(requirements.values()):
             session.state = "mutual_rendezvous"
+        elif session.corroborated_candidate_near:
+            session.state = "corroborated_candidate_near"
         elif session.browser_claim or session.openhome_claim:
             session.state = "claims_partial"
-        return {"schema": SCHEMA, "rendezvous_id": rendezvous_id, "state": session.state, "requirements": requirements, "scope": {"origin": session.origin, "pathname": session.pathname}}
+        return {"schema": SCHEMA, "rendezvous_id": rendezvous_id, "state": session.state, "requirements": requirements, "scope": {"origin": session.origin, "pathname": session.pathname}, "observations": {role: {key: value for key, value in item.items() if key != "advertisement_commitment"} for role, item in session.observations.items()}, "tripwires": list(session.tripwires)}
 
     def issue_grant(self, rendezvous_id: str) -> dict[str, Any]:
         session = self._session(rendezvous_id)

@@ -101,6 +101,25 @@ class TestRendezvous(unittest.TestCase):
                 with self.assertRaises(PermissionError):
                     self.broker.submit_shared_receipt(rendezvous_id=self.rid, role=role, receipt_hash=receipt_hash, signature=signer.sign(value))
 
+    def test_corroborated_observations_are_required_in_tripwire_mode(self):
+        broker = RendezvousBroker(now=lambda: self.now, ttl_seconds=60, ping_ttl_seconds=10, require_observation=True)
+        start = broker.start(origin="https://story.markets", pathname="/", event_id="evt-tripwire", browser=Participant("browser", "browser:test", self.browser.public_key_b64), openhome=Participant("openhome", "openhome:test", self.openhome.public_key_b64))
+        rid = start["rendezvous_id"]
+        browser_observation = {"rendezvous_id": rid, "scanner": "browser", "observed_at": "2026-08-11T12:00:01Z", "service_uuid": "12345678-1234-5678-1234-56789abcdef0", "advertisement_commitment": "hmac:rotating-token", "rssi_bucket": -45, "sample_count": 3}
+        openhome_observation = {**browser_observation, "scanner": "openhome", "observed_at": "2026-08-11T12:00:02Z"}
+        broker.submit_observation(**browser_observation)
+        result = broker.submit_observation(**openhome_observation)
+        self.assertEqual(result["state"], "corroborated_candidate_near")
+        self.assertTrue(result["requirements"]["corroborated_candidate_near"])
+
+        mismatched = broker.start(origin="https://story.markets", pathname="/", event_id="evt-tripwire-2", browser=Participant("browser", "browser:test", self.browser.public_key_b64), openhome=Participant("openhome", "openhome:test", self.openhome.public_key_b64))
+        broker.submit_observation(rendezvous_id=mismatched["rendezvous_id"], scanner="browser", observed_at="2026-08-11T12:00:01Z", service_uuid="service-a", advertisement_commitment="hmac:a", rssi_bucket=-45)
+        flagged = broker.submit_observation(rendezvous_id=mismatched["rendezvous_id"], scanner="openhome", observed_at="2026-08-11T12:00:02Z", service_uuid="service-a", advertisement_commitment="hmac:b", rssi_bucket=-45)
+        self.assertEqual(flagged["state"], "quarantined")
+        self.assertEqual(flagged["tripwires"][0]["reason"], "scanner_observation_mismatch")
+        with self.assertRaises(PermissionError):
+            broker.issue_grant(mismatched["rendezvous_id"])
+
     def test_expired_ping_is_rejected(self):
         ping = self.broker.issue_ping(self.rid)
         self.now += timedelta(seconds=11)

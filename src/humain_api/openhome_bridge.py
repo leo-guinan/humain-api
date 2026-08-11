@@ -77,7 +77,7 @@ class OpenHomeBridge:
         self.seen_events: dict[str, datetime] = {}
         self.last_pointer: tuple[str, datetime] | None = None
         self.queue: list[dict[str, Any]] = []
-        self.rendezvous = RendezvousBroker()
+        self.rendezvous = RendezvousBroker(require_observation=True)
 
     def start_rendezvous(self, data: dict[str, Any]) -> dict[str, Any]:
         if not self.arm_state or not self.arm_state.active:
@@ -110,6 +110,8 @@ class OpenHomeBridge:
             return self.rendezvous.answer_ping(rendezvous_id=rendezvous_id, role=str(data.get("role", "")), ping_id=str(data.get("ping_id", "")), nonce=str(data.get("nonce", "")), signature=data.get("signature") or {}, observed_at=str(data.get("observed_at", "")))
         if action == "receipt":
             return self.rendezvous.submit_shared_receipt(rendezvous_id=rendezvous_id, role=str(data.get("role", "")), receipt_hash=str(data.get("receipt_hash", "")), signature=data.get("signature") or {})
+        if action == "observation":
+            return self.rendezvous.submit_observation(rendezvous_id=rendezvous_id, scanner=str(data.get("scanner", "")), observed_at=str(data.get("observed_at", "")), service_uuid=str(data.get("service_uuid", "")), advertisement_commitment=str(data.get("advertisement_commitment", "")), rssi_bucket=data.get("rssi_bucket"), sample_count=int(data.get("sample_count", 1)))
         if action == "bind":
             return self.rendezvous.bind(rendezvous_id=rendezvous_id, binding_code=str(data.get("binding_code", "")))
         if action == "grant":
@@ -247,6 +249,8 @@ class OpenHomeBridgeHandler(BaseHTTPRequestHandler):
                 self._json(200, self.bridge.rendezvous_action("answer_ping", data))
             elif self.path == "/v1/rendezvous/receipt":
                 self._json(200, self.bridge.rendezvous_action("receipt", data))
+            elif self.path == "/v1/rendezvous/observation":
+                self._json(200, self.bridge.rendezvous_action("observation", data))
             elif self.path == "/v1/rendezvous/bind":
                 self._json(200, self.bridge.rendezvous_action("bind", data))
             elif self.path == "/v1/rendezvous/grant":

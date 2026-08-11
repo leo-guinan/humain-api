@@ -29,7 +29,24 @@ browser signature
   public URL or stable user identifier.
 - The resulting grant is single-use, public-only, and action-scoped.
 
-## Adapter endpoints
+## Tripwire mode
+
+The bridge enables low-value tripwire mode for rendezvous grants. The browser
+and OpenHome sides may submit bounded passive-scan observations, but never raw
+Bluetooth addresses or device lists. Matching service UUID, short-lived
+advertisement commitments, timestamps, and coarse RSSI values produce:
+
+```text
+corroborated_candidate_near
+```
+
+A mismatch, replay, stale observation, timing divergence, or large RSSI
+ disagreement appends a `humain.rendezvous.tripwire.v1` receipt and permanently
+quarantines that rendezvous. A tripwire never authorizes an action.
+
+This is corroboration, not proof of physical proximity. The stock DevKit still
+cannot produce `near_verified` without a signed runtime BLE challenge.
+
 
 The local bridge exposes the verifier under `/v1/rendezvous/`:
 
