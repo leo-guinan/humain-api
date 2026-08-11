@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate trajectory signals on a deterministic mixed movement fixture."""
+"""Evaluate trajectory signals on a deterministic adversarial movement fixture."""
 from __future__ import annotations
 
 import json
@@ -13,9 +13,10 @@ from humain_api.trajectory import compare_trajectories, compress_events
 
 
 def event(kind: str, minute: int, nonce: str, *, state: str = "public_only") -> dict:
+    hour, minute = divmod(minute, 60)
     return {
         "event_type": kind,
-        "occurred_at": f"2026-08-10T16:{minute:02d}:00Z",
+        "occurred_at": f"2026-08-10T{16 + hour:02d}:{minute:02d}:00Z",
         "pointer_class": "public-web",
         "state": state,
         "action": "resolve" if kind.startswith("resolve") else "render",
@@ -24,89 +25,109 @@ def event(kind: str, minute: int, nonce: str, *, state: str = "public_only") -> 
     }
 
 
+def sequence(nonce: str, start: int = 0, *, spacing: int = 1) -> list[dict]:
+    return [
+        event("resolve.request", start, nonce),
+        event("resolve.response", start + spacing, nonce),
+        event("memetic.render", start + spacing * 2, nonce),
+        event("receipt.close", start + spacing * 3, nonce),
+    ]
+
+
 def paths() -> dict[str, list[dict]]:
+    baseline = sequence("base-1")
     return {
-        "baseline": [
-            event("resolve.request", 0, "base-1"),
-            event("resolve.response", 1, "base-1"),
-            event("memetic.render", 2, "base-1"),
-            event("receipt.close", 3, "base-1"),
+        "baseline": baseline,
+        "continuation": sequence("cont-1", 10),
+        "payload_mutation": [dict(item, payload={"changed": True}) for item in sequence("payload-1", 20)],
+        "timing_shift": sequence("timing-1", 30, spacing=20),
+        "partial_replay": [
+            dict(item, nonce="base-1" if index == 0 else f"partial-{index}")
+            for index, item in enumerate(sequence("partial-unused", 50))
         ],
-        "continuation": [
-            event("resolve.request", 10, "cont-1"),
-            event("resolve.response", 11, "cont-1"),
-            event("memetic.render", 12, "cont-1"),
-            event("receipt.close", 13, "cont-1"),
-        ],
+        "mimicry": sequence("mimic-1", 60),
         "novel_branch": [
-            event("resolve.request", 20, "novel-1"),
-            event("capability.refresh", 21, "novel-1", state="denied"),
-            event("human.confirm", 22, "novel-1", state="denied"),
-            event("resolve.response", 23, "novel-1", state="public_only"),
-            event("memetic.render", 24, "novel-1"),
+            event("resolve.request", 70, "novel-1"),
+            event("capability.refresh", 71, "novel-1", state="denied"),
+            event("human.confirm", 72, "novel-1", state="denied"),
+            event("resolve.response", 73, "novel-1", state="public_only"),
+            event("memetic.render", 74, "novel-1"),
         ],
-        "recovery": [
-            event("resolve.request", 30, "recover-1"),
-            event("resolve.response", 31, "recover-1"),
-            event("memetic.render", 32, "recover-1"),
-            event("receipt.close", 33, "recover-1"),
+        "drift": [
+            event("observe.external", 80, "drift-1", state="unavailable"),
+            event("attest.request", 81, "drift-1", state="denied"),
+            event("action.preview", 82, "drift-1", state="denied"),
+            event("human.confirm", 83, "drift-1", state="denied"),
         ],
-        "replay": [
-            event("resolve.request", 0, "base-1"),
-            event("resolve.response", 1, "base-1"),
-            event("memetic.render", 2, "base-1"),
-            event("receipt.close", 3, "base-1"),
-        ],
+        "recovery": sequence("recover-1", 90),
+        "replay": [dict(item, nonce="base-1") for item in sequence("replay-unused", 0)],
+        "cold_start": sequence("cold-1", 100)[:2],
     }
+
+
+EXPECTED = {
+    "continuation": {"classification": "continuation", "policy": "normal"},
+    "payload_mutation": {"classification": "continuation", "policy": "normal"},
+    "timing_shift": {"classification": "novel_branch", "policy": "review"},
+    "partial_replay": {"classification": "continuation", "policy": "crypto_recheck"},
+    "mimicry": {"classification": "continuation", "policy": "crypto_recheck"},
+    "novel_branch": {"classification": "novel_branch_or_drift", "policy": "review"},
+    "drift": {"classification": "drift", "policy": "review"},
+    "recovery": {"classification": "continuation", "policy": "normal"},
+    "replay": {"classification": "replay_suspect", "policy": "reject_or_reissue"},
+    "cold_start": {"classification": "insufficient_pattern", "policy": "public_only"},
+}
 
 
 def main() -> None:
     raw = paths()
-    capsules = {name: compress_events(events, window_id=name, source_label="mixed-fixture") for name, events in raw.items()}
-    comparisons = {}
-    for name in ("continuation", "novel_branch", "recovery", "replay"):
-        comparisons[name] = compare_trajectories(capsules[name], capsules["baseline"])
-
-    expected = {
-        "continuation": "continuation",
-        "novel_branch": {"novel_branch", "drift"},
-        "recovery": "continuation",
-        "replay": "replay_suspect",
+    capsules = {name: compress_events(events, window_id=name, source_label="adversarial-fixture") for name, events in raw.items()}
+    comparisons = {
+        name: compare_trajectories(capsules[name], capsules["baseline"])
+        for name in raw
+        if name != "baseline"
     }
-    normal_cases = {"continuation", "recovery"}
-    abnormal_cases = {"novel_branch", "replay"}
-    false_friction_cases = [name for name in normal_cases if comparisons[name]["classification"] != "continuation"]
-    missed_drift_cases = [name for name in abnormal_cases if comparisons[name]["classification"] == "continuation"]
-    expectation_misses = [
-        name for name, expected_value in expected.items()
-        if comparisons[name]["classification"] not in (expected_value if isinstance(expected_value, set) else {expected_value})
-    ]
+    expectation_misses = []
+    for name, expected in EXPECTED.items():
+        actual = comparisons[name]["classification"]
+        allowed = {"novel_branch", "drift"} if expected["classification"] == "novel_branch_or_drift" else {expected["classification"]}
+        if actual not in allowed:
+            expectation_misses.append({"case": name, "expected": sorted(allowed), "actual": actual})
+
+    normal_cases = {name for name, expected in EXPECTED.items() if expected["classification"] == "continuation"}
+    drift_cases = {name for name, expected in EXPECTED.items() if expected["policy"] in {"review", "reject_or_reissue"}}
+    false_friction = [name for name in normal_cases if comparisons[name]["classification"] != "continuation"]
+    missed_drift = [name for name in drift_cases if comparisons[name]["classification"] in {"continuation", "insufficient_pattern"} and EXPECTED[name]["policy"] != "public_only"]
     report = {
-        "schema": "humain.trajectory.evaluation.v1",
-        "fixture": "mixed-normal-novel-recovery-replay.v1",
+        "schema": "humain.trajectory.evaluation.v2",
+        "fixture": "adversarial-movement-matrix.v1",
         "baseline_capsule": capsules["baseline"].to_dict(),
-        "cases": {name: {"comparison": comparisons[name], "capsule": capsules[name].to_dict()} for name in comparisons},
+        "cases": {
+            name: {"expected": EXPECTED[name], "comparison": comparisons[name], "capsule": capsules[name].to_dict()}
+            for name in comparisons
+        },
         "metrics": {
             "normal_case_count": len(normal_cases),
-            "abnormal_case_count": len(abnormal_cases),
-            "false_friction_count": len(false_friction_cases),
-            "false_friction_rate": len(false_friction_cases) / len(normal_cases),
-            "missed_drift_count": len(missed_drift_cases),
-            "missed_drift_rate": len(missed_drift_cases) / len(abnormal_cases),
+            "review_or_reject_case_count": len(drift_cases),
+            "false_friction_cases": false_friction,
+            "false_friction_rate": len(false_friction) / len(normal_cases),
+            "missed_drift_cases": missed_drift,
+            "missed_drift_rate": len(missed_drift) / len(drift_cases),
             "expectation_misses": expectation_misses,
         },
         "provenance": {
-            "method": "deterministic-trajectory-evaluator",
-            "falsifier": "a matched normal continuation or recovery path must not be challenged, and a known novel/replay path must not be accepted as continuation",
+            "method": "deterministic-trajectory-adversarial-evaluator",
+            "falsifier": "normal movement must not be challenged, and known drift/replay must not be accepted as ordinary continuation",
             "synthetic": True,
+            "policy_note": "trajectory similarity never grants access; crypto_recheck remains required for mimicry-shaped paths",
         },
     }
-    output = ROOT / "reports" / "trajectory-evaluation.json"
+    output = ROOT / "reports" / "trajectory-adversarial-evaluation.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     print(json.dumps({"output": str(output), "metrics": report["metrics"], "classifications": {name: result["classification"] for name, result in comparisons.items()}}, sort_keys=True))
     if expectation_misses:
-        raise SystemExit("trajectory evaluation expectations failed")
+        raise SystemExit("trajectory adversarial evaluation expectations failed")
 
 
 if __name__ == "__main__":

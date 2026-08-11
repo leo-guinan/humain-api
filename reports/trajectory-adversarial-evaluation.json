@@ -1,0 +1,873 @@
+{
+  "baseline_capsule": {
+    "capsule_bytes": 1100,
+    "capsule_id": "capsule:9f99effc6cad95b49553f304",
+    "compression_ratio": 0.625455,
+    "compression_status": "expanded",
+    "event_count": 4,
+    "event_type_counts": {
+      "memetic.render": 1,
+      "receipt.close": 1,
+      "resolve.request": 1,
+      "resolve.response": 1
+    },
+    "event_type_runs": [
+      [
+        "resolve.request",
+        1
+      ],
+      [
+        "resolve.response",
+        1
+      ],
+      [
+        "memetic.render",
+        1
+      ],
+      [
+        "receipt.close",
+        1
+      ]
+    ],
+    "nonce_count": 1,
+    "nonce_set_hash": "sha256:53881c03bd7bd2c13f85f9890e5b298b351010a519ec402df61abd545326e86e",
+    "path_digest": "sha256:553e8cc544734ed9d555fe1a70701e2d60281270f663951192b97337607a8ee2",
+    "provenance": {
+      "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+      "method": "deterministic-trajectory-compressor"
+    },
+    "schema": "humain.trajectory.capsule.v1",
+    "source_event_bytes": 688,
+    "source_hash": "sha256:4ab7aad8d23acb8fb998d308c70a8d6fb704286639fe5fec6161c1f51fb8e85e",
+    "source_label": "adversarial-fixture",
+    "timing_buckets": {
+      "1-4m": 3
+    },
+    "transition_entropy_bits": 1.584963,
+    "transitions": {
+      "memetic.render>receipt.close": 1,
+      "resolve.request>resolve.response": 1,
+      "resolve.response>memetic.render": 1
+    },
+    "window_id": "baseline"
+  },
+  "cases": {
+    "cold_start": {
+      "capsule": {
+        "capsule_bytes": 951,
+        "capsule_id": "capsule:6bf15051c32cb10bc53c2858",
+        "compression_ratio": 0.364879,
+        "compression_status": "expanded",
+        "event_count": 2,
+        "event_type_counts": {
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:a9129343d7d7ce14ae58900df23050ad882ec21ee8feaa4ec8d4501d51f494eb",
+        "path_digest": "sha256:eb13108a8644aff8292f06176ebda4967c01238e08fa90335a6a1df33fdb234a",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 347,
+        "source_hash": "sha256:7c510431a1e1e4ff10e7cc900b21ba20a814d98bf54b1be4df6b712bac360ebe",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 1
+        },
+        "transition_entropy_bits": -0.0,
+        "transitions": {
+          "resolve.request>resolve.response": 1
+        },
+        "window_id": "cold_start"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "insufficient_pattern",
+        "current_capsule": "capsule:6bf15051c32cb10bc53c2858",
+        "novelty": null,
+        "reasons": [
+          "minimum event count is three"
+        ],
+        "schema": "humain.trajectory.comparison.v1"
+      },
+      "expected": {
+        "classification": "insufficient_pattern",
+        "policy": "public_only"
+      }
+    },
+    "continuation": {
+      "capsule": {
+        "capsule_bytes": 1104,
+        "capsule_id": "capsule:03112e37f8e7c7a8567c1f14",
+        "compression_ratio": 0.623188,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:32ab9effcf2e38783aecf1ef6700ddb3daed0a93a907c343ef9f68b2bed06c46",
+        "path_digest": "sha256:4bb4335cf4397516b0e16653fb9d20a85a28aca7f1a9d9ff744e7785363c782f",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 688,
+        "source_hash": "sha256:d1c19404ce6206ab6991cf0730ce0cd16f534ceb8ff30b0e1f2ca4013b78f227",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "continuation"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "continuation",
+        "current_capsule": "capsule:03112e37f8e7c7a8567c1f14",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": false,
+          "sequence_distance": 0.0,
+          "timing_distance": 0.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.0,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 1.0,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "continuation",
+        "policy": "normal"
+      }
+    },
+    "drift": {
+      "capsule": {
+        "capsule_bytes": 1092,
+        "capsule_id": "capsule:c8473ae3a30deca2a91616cd",
+        "compression_ratio": 0.617216,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "action.preview": 1,
+          "attest.request": 1,
+          "human.confirm": 1,
+          "observe.external": 1
+        },
+        "event_type_runs": [
+          [
+            "observe.external",
+            1
+          ],
+          [
+            "attest.request",
+            1
+          ],
+          [
+            "action.preview",
+            1
+          ],
+          [
+            "human.confirm",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:a1079b3e4698acc1cea9fb869125f22e0c6f7f27a94b0484e068748c377d57c4",
+        "path_digest": "sha256:8b376f72f85dd36b254678f790d3be1ac34807972fdafdfe8c2ee7e97e323fe4",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 674,
+        "source_hash": "sha256:44a765f96b281ce398657a0d61c7b60a15d795a299bb412739f26fde76ecc719",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "action.preview>human.confirm": 1,
+          "attest.request>action.preview": 1,
+          "observe.external>attest.request": 1
+        },
+        "window_id": "drift"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "drift",
+        "current_capsule": "capsule:c8473ae3a30deca2a91616cd",
+        "features": {
+          "event_type_distance": 1.0,
+          "nonce_overlap": false,
+          "sequence_distance": 1.0,
+          "timing_distance": 0.0,
+          "transition_distance": 1.0
+        },
+        "novelty": 0.75,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 0.25,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "drift",
+        "policy": "review"
+      }
+    },
+    "mimicry": {
+      "capsule": {
+        "capsule_bytes": 1099,
+        "capsule_id": "capsule:9f3c09040716ce34e82ff311",
+        "compression_ratio": 0.629663,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:c6c52ce408a38417d995f9b3eee44f31e7faceb8d4edc712b28806229d93868d",
+        "path_digest": "sha256:e805b93d1fa387591dc6648c3131c7b8e065f96fcedd76294cab5a01001f9aa2",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 692,
+        "source_hash": "sha256:d465eed15a26979243b5dbed033d7a5a24cb97a6923523fc76f36bb81e238215",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "mimicry"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "continuation",
+        "current_capsule": "capsule:9f3c09040716ce34e82ff311",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": false,
+          "sequence_distance": 0.0,
+          "timing_distance": 0.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.0,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 1.0,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "continuation",
+        "policy": "crypto_recheck"
+      }
+    },
+    "novel_branch": {
+      "capsule": {
+        "capsule_bytes": 1188,
+        "capsule_id": "capsule:580773db7913044d008b285e",
+        "compression_ratio": 0.722222,
+        "compression_status": "expanded",
+        "event_count": 5,
+        "event_type_counts": {
+          "capability.refresh": 1,
+          "human.confirm": 1,
+          "memetic.render": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "capability.refresh",
+            1
+          ],
+          [
+            "human.confirm",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:809f66cf41fffbb2e376693c4fb12c0622445c343d427feb89f16a70de6ab757",
+        "path_digest": "sha256:7282da54392cb4b73ef74b0ca0642a21a8d50eb674e6b8bebc38c88aee4cb09d",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 858,
+        "source_hash": "sha256:e34bf103599e30a729959ab94eea9c20953724dac6fd18f46bc6c0b83a319596",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 4
+        },
+        "transition_entropy_bits": 2.0,
+        "transitions": {
+          "capability.refresh>human.confirm": 1,
+          "human.confirm>resolve.response": 1,
+          "resolve.request>capability.refresh": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "novel_branch"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "novel_branch",
+        "current_capsule": "capsule:580773db7913044d008b285e",
+        "features": {
+          "event_type_distance": 0.5,
+          "nonce_overlap": false,
+          "sequence_distance": 0.6,
+          "timing_distance": 0.0,
+          "transition_distance": 0.833333
+        },
+        "novelty": 0.483333,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 0.516667,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "novel_branch_or_drift",
+        "policy": "review"
+      }
+    },
+    "partial_replay": {
+      "capsule": {
+        "capsule_bytes": 1106,
+        "capsule_id": "capsule:d0c30c2c0808cac5cb69a2b4",
+        "compression_ratio": 0.630199,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 4,
+        "nonce_set_hash": "sha256:e434d952fed77df530d898c1b1c0cc5cbc414bada29b1f84c1f36225a9899e3a",
+        "path_digest": "sha256:c1dee8e2df3dce1c9a0e84761cd71cdc36dbe8d580fd953715e1e540b54b888e",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 697,
+        "source_hash": "sha256:d93f124ca3907cf8a077cb1131b611104103f080b218ba179562a14fad9278c3",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "partial_replay"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "continuation",
+        "current_capsule": "capsule:d0c30c2c0808cac5cb69a2b4",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": false,
+          "sequence_distance": 0.0,
+          "timing_distance": 0.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.0,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 1.0,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "continuation",
+        "policy": "crypto_recheck"
+      }
+    },
+    "payload_mutation": {
+      "capsule": {
+        "capsule_bytes": 1108,
+        "capsule_id": "capsule:e53f84b0f2e732e79d077965",
+        "compression_ratio": 0.729242,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:90cfa599fcf974a3d2a0a2f2ad02217114f9e529922d5848b698930c855ca05a",
+        "path_digest": "sha256:dccf97ddafb6ecf8c129b526a6bf7d0696c32f60884e547ccc6ba16139de1bd4",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 808,
+        "source_hash": "sha256:b9360ca6e15f2ad1cd93ad6bc995f5bde3eaaab6c34a3af7cb5fe1568dac973d",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "payload_mutation"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "continuation",
+        "current_capsule": "capsule:e53f84b0f2e732e79d077965",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": false,
+          "sequence_distance": 0.0,
+          "timing_distance": 0.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.0,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 1.0,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "continuation",
+        "policy": "normal"
+      }
+    },
+    "recovery": {
+      "capsule": {
+        "capsule_bytes": 1100,
+        "capsule_id": "capsule:2bbb224a6c7c476353c7984c",
+        "compression_ratio": 0.636364,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:39ea48f92a33815dc768770df733212d8f4ec91319d72abdce1be576dec520e9",
+        "path_digest": "sha256:78e4bb29e057f4645dc568afdb10ae85812c4eed00961fa334ea5c2d57dba09a",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 700,
+        "source_hash": "sha256:b7bc65b558fe04016d5b604e48abc7bb26480ed252215006e10881701d4c0008",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "recovery"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "continuation",
+        "current_capsule": "capsule:2bbb224a6c7c476353c7984c",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": false,
+          "sequence_distance": 0.0,
+          "timing_distance": 0.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.0,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 1.0,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "continuation",
+        "policy": "normal"
+      }
+    },
+    "replay": {
+      "capsule": {
+        "capsule_bytes": 1098,
+        "capsule_id": "capsule:773608bbe81434a1cd0e2ee9",
+        "compression_ratio": 0.626594,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:53881c03bd7bd2c13f85f9890e5b298b351010a519ec402df61abd545326e86e",
+        "path_digest": "sha256:553e8cc544734ed9d555fe1a70701e2d60281270f663951192b97337607a8ee2",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 688,
+        "source_hash": "sha256:4ab7aad8d23acb8fb998d308c70a8d6fb704286639fe5fec6161c1f51fb8e85e",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "1-4m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "replay"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "replay_suspect",
+        "current_capsule": "capsule:773608bbe81434a1cd0e2ee9",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": true,
+          "sequence_distance": 0.0,
+          "timing_distance": 0.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.0,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 1.0,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "replay_suspect",
+        "policy": "reject_or_reissue"
+      }
+    },
+    "timing_shift": {
+      "capsule": {
+        "capsule_bytes": 1105,
+        "capsule_id": "capsule:09e1b4d0e44dfb04f88280e6",
+        "compression_ratio": 0.629864,
+        "compression_status": "expanded",
+        "event_count": 4,
+        "event_type_counts": {
+          "memetic.render": 1,
+          "receipt.close": 1,
+          "resolve.request": 1,
+          "resolve.response": 1
+        },
+        "event_type_runs": [
+          [
+            "resolve.request",
+            1
+          ],
+          [
+            "resolve.response",
+            1
+          ],
+          [
+            "memetic.render",
+            1
+          ],
+          [
+            "receipt.close",
+            1
+          ]
+        ],
+        "nonce_count": 1,
+        "nonce_set_hash": "sha256:596dc90229a64a92c5d75cec5a4416ada52c55106669ab1c7c3b153df3bcb6b2",
+        "path_digest": "sha256:a566f458b0cfc97a0437c5348c67fe634b011cc2ca6b0947b72697c7c1d5d805",
+        "provenance": {
+          "falsifier": "a known normal path must not be classified as drift solely because its payload changed",
+          "method": "deterministic-trajectory-compressor"
+        },
+        "schema": "humain.trajectory.capsule.v1",
+        "source_event_bytes": 696,
+        "source_hash": "sha256:6c160d6d1f96cd83c34463016fde03173e3d1c12abd263f9cf10b4e132700463",
+        "source_label": "adversarial-fixture",
+        "timing_buckets": {
+          "5-29m": 3
+        },
+        "transition_entropy_bits": 1.584963,
+        "transitions": {
+          "memetic.render>receipt.close": 1,
+          "resolve.request>resolve.response": 1,
+          "resolve.response>memetic.render": 1
+        },
+        "window_id": "timing_shift"
+      },
+      "comparison": {
+        "baseline_capsule": "capsule:9f99effc6cad95b49553f304",
+        "classification": "novel_branch",
+        "current_capsule": "capsule:09e1b4d0e44dfb04f88280e6",
+        "features": {
+          "event_type_distance": 0.0,
+          "nonce_overlap": false,
+          "sequence_distance": 0.0,
+          "timing_distance": 1.0,
+          "transition_distance": 0.0
+        },
+        "novelty": 0.25,
+        "provenance": {
+          "falsifier": "matched normal trajectories should remain continuation across changed payloads",
+          "method": "deterministic-trajectory-comparison"
+        },
+        "schema": "humain.trajectory.comparison.v1",
+        "similarity": 0.75,
+        "thresholds": {
+          "continuation_max_novelty": 0.2,
+          "minimum_event_count": 3,
+          "novel_branch_max_novelty": 0.5
+        }
+      },
+      "expected": {
+        "classification": "novel_branch",
+        "policy": "review"
+      }
+    }
+  },
+  "fixture": "adversarial-movement-matrix.v1",
+  "metrics": {
+    "expectation_misses": [],
+    "false_friction_cases": [],
+    "false_friction_rate": 0.0,
+    "missed_drift_cases": [],
+    "missed_drift_rate": 0.0,
+    "normal_case_count": 5,
+    "review_or_reject_case_count": 4
+  },
+  "provenance": {
+    "falsifier": "normal movement must not be challenged, and known drift/replay must not be accepted as ordinary continuation",
+    "method": "deterministic-trajectory-adversarial-evaluator",
+    "policy_note": "trajectory similarity never grants access; crypto_recheck remains required for mimicry-shaped paths",
+    "synthetic": true
+  },
+  "schema": "humain.trajectory.evaluation.v2"
+}

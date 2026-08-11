@@ -163,7 +163,8 @@ def compare_trajectories(current: TrajectoryCapsule, baseline: TrajectoryCapsule
     type_distance = 1 - _jaccard(set(left["event_type_counts"]), set(right["event_type_counts"]))
     transition_distance = 1 - _jaccard(set(left["transitions"]), set(right["transitions"]))
     sequence_distance = _sequence_distance(_expand_runs(left["event_type_runs"]), _expand_runs(right["event_type_runs"]))
-    novelty = round((type_distance + transition_distance + sequence_distance) / 3, 6)
+    timing_distance = 1 - _jaccard(set(left["timing_buckets"]), set(right["timing_buckets"]))
+    novelty = round((type_distance + transition_distance + sequence_distance + timing_distance) / 4, 6)
     nonce_overlap = left["nonce_set_hash"] == right["nonce_set_hash"] and left["nonce_count"] > 0
     if nonce_overlap and left["capsule_id"] != right["capsule_id"] and novelty <= 0.2:
         classification = "replay_suspect"
@@ -178,7 +179,7 @@ def compare_trajectories(current: TrajectoryCapsule, baseline: TrajectoryCapsule
         "classification": classification,
         "novelty": novelty,
         "similarity": round(1 - novelty, 6),
-        "features": {"event_type_distance": round(type_distance, 6), "transition_distance": round(transition_distance, 6), "sequence_distance": round(sequence_distance, 6), "nonce_overlap": nonce_overlap},
+        "features": {"event_type_distance": round(type_distance, 6), "transition_distance": round(transition_distance, 6), "sequence_distance": round(sequence_distance, 6), "timing_distance": round(timing_distance, 6), "nonce_overlap": nonce_overlap},
         "thresholds": {"continuation_max_novelty": 0.2, "novel_branch_max_novelty": 0.5, "minimum_event_count": 3},
         "baseline_capsule": right["capsule_id"],
         "current_capsule": left["capsule_id"],

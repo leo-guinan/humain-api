@@ -57,6 +57,16 @@ class TrajectoryTests(unittest.TestCase):
         self.assertEqual(capsule.value["compression_status"], "compressed")
         self.assertLess(len(capsule.value["event_type_runs"]), capsule.value["event_count"])
 
+    def test_timing_shift_is_measured(self):
+        shifted = [
+            {"event_type": "resolve.request", "occurred_at": "2026-08-10T12:00:00Z", "nonce": "shift"},
+            {"event_type": "resolve.response", "occurred_at": "2026-08-10T12:20:00Z", "nonce": "shift"},
+            {"event_type": "memetic.render", "occurred_at": "2026-08-10T12:40:00Z", "nonce": "shift"},
+            {"event_type": "receipt.close", "occurred_at": "2026-08-10T13:00:00Z", "nonce": "shift"},
+        ]
+        comparison = compare_trajectories(compress_events(shifted, window_id="timing"), compress_events(BASE, window_id="w1"))
+        self.assertGreater(comparison["features"]["timing_distance"], 0)
+
     def test_cold_start_is_insufficient_pattern(self):
         short = compress_events(BASE[:2], window_id="short")
         comparison = compare_trajectories(short, short)
