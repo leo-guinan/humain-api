@@ -28,7 +28,7 @@ class ProximityObserverCapability(MatchingCapability):
                 try:
                     result = await self.capability_worker.send_devkit_capability_action(
                         function_name="scan_pending",
-                        args=[relay_url, auth_token, key_ref, service_uuid],
+                        args=[relay_url, key_ref, service_uuid],
                         timeout=10,
                     )
                     if isinstance(result, dict) and result.get("success"):

@@ -45,7 +45,7 @@ class HumAInContextBootstrapCapability(MatchingCapability):
 
             result = await self.capability_worker.send_devkit_capability_action(
                 function_name="scan_pending",
-                args=[relay_url, auth_token, key_ref, SERVICE_UUID],
+                args=[relay_url, key_ref, SERVICE_UUID],
                 capability_name=OBSERVER_NAME,
                 timeout=10,
             )

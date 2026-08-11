@@ -75,11 +75,11 @@ async def _scan(service_uuid, key):
 def _config(args=None):
     args = list(args or [])
     relay = (args[0] if len(args) > 0 else os.environ.get("HUMAIN_RENDEZVOUS_URL", "")).rstrip("/")
-    token = args[1] if len(args) > 1 else os.environ.get("HUMAIN_RENDEZVOUS_AUTH_TOKEN", "")
-    key_ref = args[2] if len(args) > 2 else os.environ.get("HUMAIN_OPENHOME_KEY_REF", "")
-    service_uuid = args[3] if len(args) > 3 else os.environ.get("HUMAIN_BLE_SERVICE_UUID", DEFAULT_SERVICE_UUID)
+    key_ref = args[1] if len(args) > 1 else os.environ.get("HUMAIN_OPENHOME_KEY_REF", "")
+    service_uuid = args[2] if len(args) > 2 else os.environ.get("HUMAIN_BLE_SERVICE_UUID", DEFAULT_SERVICE_UUID)
+    token = os.environ.get("HUMAIN_RENDEZVOUS_AUTH_TOKEN", "")
     if not relay or not key_ref or not token:
-        raise RuntimeError("rendezvous URL, auth token, and OpenHome key reference are required")
+        raise RuntimeError("rendezvous URL, DevKit runtime auth token, and OpenHome key reference are required")
     return relay, key_ref, service_uuid, token
 
 
