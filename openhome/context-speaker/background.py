@@ -1,8 +1,6 @@
 from src.agent.capability import MatchingCapability
 from src.main import AgentWorker
 from src.agent.capability_worker import CapabilityWorker
-import json
-import urllib.request
 
 BRIDGE_URL = "http://127.0.0.1:8790/v1/openhome/next"
 POLL_SECONDS = 2.0
@@ -25,9 +23,13 @@ class HumAInContextSpeaker(MatchingCapability):
     async def observe_loop(self):
         while True:
             try:
-                request = urllib.request.Request(BRIDGE_URL, headers={"User-Agent": "humain-openhome-context/0.1"})
-                with urllib.request.urlopen(request, timeout=2) as response:
-                    data = json.loads(response.read().decode("utf-8"))
+                response = await self.worker.session_tasks.get_async(
+                    BRIDGE_URL,
+                    headers={"User-Agent": "humain-openhome-context/0.1"},
+                    timeout=2,
+                )
+                response.raise_for_status()
+                data = response.json()
                 envelope = data.get("speech_envelope") or {}
                 delivery_id = str(envelope.get("delivery_id", ""))
                 speech_text = str(envelope.get("speech_text", "")).strip()
