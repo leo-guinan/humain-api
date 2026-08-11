@@ -95,7 +95,7 @@ def scan_pending():
     except Exception as error:
         log.exception("scan_pending failed")
         payload = {"success": False, "schema": "humain.rendezvous.devkit-observation.v1", "pending_count": 0, "submitted": [], "private_context": False, "raw_devices": False, "error": {"code": "devkit_scan_unavailable", "message": str(error)[:200]}}
-    print(json.dumps(payload, separators=(",", ":")))
+    sys.stdout.write(json.dumps(payload, separators=(",", ":")) + "\n")
 
 
 FUNCTION_REGISTRY = {"scan_pending": scan_pending}
@@ -103,6 +103,6 @@ FUNCTION_REGISTRY = {"scan_pending": scan_pending}
 if __name__ == "__main__":
     function_name = sys.argv[1] if len(sys.argv) > 1 else ""
     if function_name not in FUNCTION_REGISTRY:
-        print(json.dumps({"success": False, "error": {"code": "unknown_function"}}))
+        sys.stdout.write(json.dumps({"success": False, "error": {"code": "unknown_function"}}) + "\n")
         sys.exit(1)
     FUNCTION_REGISTRY[function_name]()
