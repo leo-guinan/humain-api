@@ -105,7 +105,7 @@ class OpenHomeBridge:
 
     def status(self) -> dict[str, Any]:
         active = bool(self.arm_state and self.arm_state.active)
-        return {"schema": "humain.openhome.bridge.status.v1", "armed": active, "muted": bool(self.arm_state and self.arm_state.muted), "session_id": self.arm_state.session_id if self.arm_state else None, "expires_at": _iso(self.arm_state.expires_at) if self.arm_state else None, "presence_state": (self.presence or {}).get("presence_state", "absent"), "flow_eligible": bool(self.presence and self.presence.get("flow_eligible")), "queued": len(self.queue)}
+        return {"schema": "humain.openhome.bridge.status.v1", "armed": active, "muted": bool(self.arm_state and self.arm_state.muted), "session_id": self.arm_state.session_id if self.arm_state else None, "expires_at": _iso(self.arm_state.expires_at) if self.arm_state else None, "presence_state": (self.presence or {}).get("presence_state", "absent"), "paired_device": (self.presence or {}).get("paired_device"), "flow_eligible": bool(self.presence and self.presence.get("flow_eligible")), "queued": len(self.queue)}
 
     def submit_event(self, event: dict[str, Any]) -> dict[str, Any]:
         if not self.arm_state or not self.arm_state.active:
