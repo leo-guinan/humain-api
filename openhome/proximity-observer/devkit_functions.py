@@ -23,9 +23,12 @@ def _now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def _post(url, payload):
+def _post(url, payload, bearer_token=""):
     body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "User-Agent": "humain-proximity-observer/1.0"}, method="POST")
+    headers = {"Content-Type": "application/json", "User-Agent": "humain-proximity-observer/1.0"}
+    if bearer_token:
+        headers["Authorization"] = "Bearer " + bearer_token
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST")
     with urllib.request.urlopen(request, timeout=5) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -72,24 +75,25 @@ async def _scan(service_uuid, key):
 def _config():
     relay = os.environ.get("HUMAIN_RENDEZVOUS_URL", "").rstrip("/")
     key_ref = os.environ.get("HUMAIN_OPENHOME_KEY_REF", "")
+    token = os.environ.get("HUMAIN_RENDEZVOUS_AUTH_TOKEN", "")
     service_uuid = os.environ.get("HUMAIN_BLE_SERVICE_UUID", DEFAULT_SERVICE_UUID)
-    if not relay or not key_ref:
-        raise RuntimeError("HUMAIN_RENDEZVOUS_URL and HUMAIN_OPENHOME_KEY_REF are required")
-    return relay, key_ref, service_uuid
+    if not relay or not key_ref or not token:
+        raise RuntimeError("HUMAIN_RENDEZVOUS_URL, HUMAIN_OPENHOME_KEY_REF, and HUMAIN_RENDEZVOUS_AUTH_TOKEN are required")
+    return relay, key_ref, service_uuid, token
 
 
 def scan_pending():
     """Scan only pending rendezvous for this enrolled OpenHome key reference."""
     try:
-        relay, key_ref, service_uuid = _config()
-        pending = _post(relay + "/v1/rendezvous/pending", {"key_ref": key_ref}).get("rendezvous", [])
+        relay, key_ref, service_uuid, token = _config()
+        pending = _post(relay + "/v1/rendezvous/pending", {"key_ref": key_ref}, token).get("rendezvous", [])
         submitted = []
         for item in pending[:3]:
             key_text = item.get("observation_key_b64", "")
             key = base64.urlsafe_b64decode(key_text + "=" * (-len(key_text) % 4))
             matches = asyncio.run(_scan(service_uuid, key))
             for match in matches:
-                result = _post(relay + "/v1/rendezvous/observation", {"rendezvous_id": item["rendezvous_id"], "scanner": "openhome", "observed_at": _now(), **match})
+                result = _post(relay + "/v1/rendezvous/observation", {"rendezvous_id": item["rendezvous_id"], "scanner": "openhome", "observed_at": _now(), **match}, token)
                 submitted.append({"rendezvous_id": item["rendezvous_id"], "commitment_quality": match["commitment_quality"], "status": result.get("state", "submitted")})
         payload = {"success": True, "schema": "humain.rendezvous.devkit-observation.v1", "pending_count": len(pending), "submitted": submitted, "private_context": False, "raw_devices": False, "error": None}
     except Exception as error:

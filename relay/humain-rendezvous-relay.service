@@ -1,0 +1,21 @@
+[Unit]
+Description=HumAIn Rendezvous Relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/humain-rendezvous-relay
+EnvironmentFile=/etc/humain-rendezvous-relay.env
+Environment=PYTHONPATH=/opt/humain-rendezvous-relay
+ExecStart=/opt/humain-rendezvous-relay/venv/bin/uvicorn relay.app:app --host 127.0.0.1 --port 8874 --workers 1
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

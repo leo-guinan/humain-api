@@ -8,7 +8,8 @@ bounded observation for pending HumAIn rendezvous sessions.
 Configure these values in the DevKit runtime, not in the ZIP:
 
 ```text
-HUMAIN_RENDEZVOUS_URL=https://your-relay.example
+HUMAIN_RENDEZVOUS_URL=https://rendezvous.metaspn.network
+HUMAIN_RENDEZVOUS_AUTH_TOKEN=[configured as a DevKit runtime secret]
 HUMAIN_OPENHOME_KEY_REF=openhome:device-name
 HUMAIN_BLE_SERVICE_UUID=12345678-1234-5678-1234-56789abcdef0
 ```
