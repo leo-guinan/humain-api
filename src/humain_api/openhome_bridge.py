@@ -1,0 +1,188 @@
+"""Local-only OpenHome demo bridge.
+
+The bridge accepts a normalized pointer event, not browser contents. It emits a
+one-shot, public-only Marvin speech envelope after explicit desk-mode arming.
+It is a demo boundary, not an identity provider or production trust service.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse
+import hashlib
+import json
+from typing import Any
+
+from .memetic import humanize
+
+SCHEMA = "humain.openhome.context-event.v1"
+SPEECH_SCHEMA = "humain.openhome.speech-envelope.v1"
+ALLOWED_HOSTS = {"story.markets", "www.story.markets", "buildinpublicuniversity.com"}
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _iso(value: datetime) -> str:
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def _json_bytes(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _digest(value: Any) -> str:
+    return "sha256:" + hashlib.sha256(_json_bytes(value)).hexdigest()
+
+
+def _public_response(pointer: str, event_id: str) -> dict[str, Any]:
+    return {
+        "schema": "humain.resolve.response.v1",
+        "message_id": "response:openhome:" + event_id,
+        "message_type": "resolve.response",
+        "pointer": pointer,
+        "publisher": "public-web-pointer",
+        "audience": "openhome-local-demo",
+        "resolution_state": "public_only",
+        "payload": {"pointer": pointer, "visibility": "public", "actions": []},
+        "provenance": {"created_at": _iso(_now()), "method": "openhome-local-public-demo", "parent": _digest({"pointer": pointer, "event_id": event_id})},
+        "permissions": {"action": "resolve", "capability_checked": False},
+        "error": None,
+        "signature": {"algorithm": "demo", "key_ref": "public-web-pointer", "value": "demo:unsigned"},
+    }
+
+
+@dataclass
+class DemoArm:
+    session_id: str
+    expires_at: datetime
+    muted: bool = False
+
+    @property
+    def active(self) -> bool:
+        return _now() < self.expires_at and not self.muted
+
+
+class OpenHomeBridge:
+    def __init__(self, *, max_ttl_seconds: int = 900, debounce_seconds: int = 30):
+        self.max_ttl_seconds = max_ttl_seconds
+        self.debounce_seconds = debounce_seconds
+        self.arm_state: DemoArm | None = None
+        self.seen_events: dict[str, datetime] = {}
+        self.last_pointer: tuple[str, datetime] | None = None
+        self.queue: list[dict[str, Any]] = []
+
+    def arm(self, session_id: str, ttl_seconds: int = 300) -> dict[str, Any]:
+        if not session_id or not isinstance(session_id, str):
+            raise ValueError("session_id is required")
+        ttl = max(1, min(int(ttl_seconds), self.max_ttl_seconds))
+        self.arm_state = DemoArm(session_id=session_id, expires_at=_now() + timedelta(seconds=ttl))
+        return self.status()
+
+    def mute(self) -> dict[str, Any]:
+        if self.arm_state:
+            self.arm_state.muted = True
+        return self.status()
+
+    def status(self) -> dict[str, Any]:
+        active = bool(self.arm_state and self.arm_state.active)
+        return {"schema": "humain.openhome.bridge.status.v1", "armed": active, "muted": bool(self.arm_state and self.arm_state.muted), "session_id": self.arm_state.session_id if self.arm_state else None, "expires_at": _iso(self.arm_state.expires_at) if self.arm_state else None, "queued": len(self.queue)}
+
+    def submit_event(self, event: dict[str, Any]) -> dict[str, Any]:
+        if not self.arm_state or not self.arm_state.active:
+            raise PermissionError("desk mode is not armed")
+        required = {"schema", "event_id", "pointer", "occurred_at", "client_id"}
+        missing = required - event.keys()
+        if missing or event["schema"] != SCHEMA:
+            raise ValueError(f"invalid context event: missing {sorted(missing)}")
+        event_id = str(event["event_id"])
+        pointer = str(event["pointer"])
+        parsed = urlparse(pointer)
+        if parsed.scheme != "https" or parsed.hostname not in ALLOWED_HOSTS or parsed.query or parsed.fragment:
+            raise PermissionError("pointer is outside the demo allowlist")
+        if event.get("context") or event.get("page_text") or event.get("page_html"):
+            raise PermissionError("raw browser context is not accepted")
+        if event_id in self.seen_events:
+            return {"status": "duplicate", "event_id": event_id, "speech_envelope": None}
+        self.seen_events[event_id] = _now()
+        if self.last_pointer and self.last_pointer[0] == pointer and (_now() - self.last_pointer[1]).total_seconds() < self.debounce_seconds:
+            return {"status": "debounced", "event_id": event_id, "speech_envelope": None}
+        self.last_pointer = (pointer, _now())
+        response = _public_response(pointer, event_id)
+        memetic = humanize(response)
+        envelope = {
+            "schema": SPEECH_SCHEMA,
+            "delivery_id": "speech:" + event_id,
+            "session_id": self.arm_state.session_id,
+            "pointer": pointer,
+            "speech_text": f"You have arrived at {parsed.hostname}. {memetic['surface_text']} This is an AI-generated public-context demo. Say show the receipt if you want the details.",
+            "resolution_state": response["resolution_state"],
+            "receipt": {"response_message_id": response["message_id"], "provenance": response["provenance"], "underlying_response": response},
+            "permissions": {"speech": True, "private_context": False, "actions": []},
+        }
+        self.queue.append(envelope)
+        return {"status": "queued", "event_id": event_id, "speech_envelope": envelope}
+
+    def next_message(self) -> dict[str, Any]:
+        if not self.arm_state or not self.arm_state.active:
+            return {"status": "disabled", "speech_envelope": None}
+        if not self.queue:
+            return {"status": "empty", "speech_envelope": None}
+        return {"status": "ready", "speech_envelope": self.queue.pop(0)}
+
+
+class OpenHomeBridgeHandler(BaseHTTPRequestHandler):
+    bridge: OpenHomeBridge | None = None
+
+    def _json(self, status: int, payload: dict[str, Any]) -> None:
+        body = _json_bytes(payload)
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _read(self) -> dict[str, Any]:
+        length = int(self.headers.get("Content-Length", "0"))
+        if length > 32_768:
+            raise ValueError("request too large")
+        return json.loads(self.rfile.read(length))
+
+    def do_GET(self) -> None:
+        if self.bridge is None:
+            self._json(503, {"error": "service_unavailable"})
+        elif self.path == "/v1/openhome/status":
+            self._json(200, self.bridge.status())
+        elif self.path == "/v1/openhome/next":
+            self._json(200, self.bridge.next_message())
+        else:
+            self._json(404, {"error": "not_found"})
+
+    def do_POST(self) -> None:
+        if self.bridge is None:
+            self._json(503, {"error": "service_unavailable"})
+            return
+        try:
+            data = self._read()
+            if self.path == "/v1/openhome/arm":
+                self._json(200, self.bridge.arm(data.get("session_id", ""), data.get("ttl_seconds", 300)))
+            elif self.path == "/v1/openhome/mute":
+                self._json(200, self.bridge.mute())
+            elif self.path == "/v1/openhome/context-event":
+                self._json(202, self.bridge.submit_event(data))
+            else:
+                self._json(404, {"error": "not_found"})
+        except PermissionError as exc:
+            self._json(403, {"error": "demo_boundary_rejected", "detail": str(exc)})
+        except (ValueError, TypeError, json.JSONDecodeError) as exc:
+            self._json(400, {"error": "invalid_openhome_request", "detail": str(exc)})
+
+    def log_message(self, format: str, *args: Any) -> None:
+        return
+
+
+def make_openhome_bridge_server(host: str, port: int, bridge: OpenHomeBridge) -> ThreadingHTTPServer:
+    OpenHomeBridgeHandler.bridge = bridge
+    return ThreadingHTTPServer((host, port), OpenHomeBridgeHandler)
