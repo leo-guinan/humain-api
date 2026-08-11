@@ -4,6 +4,7 @@ from .ble_adapter import BleCandidate, BleakDiscoveryAdapter, OPENHOME_DEVKIT_SE
 from .canonical import canonical_bytes, content_hash
 from .crypto import Ed25519Signer, Ed25519Verifier
 from .models import Capability, ResolutionRequest, ValidationError
+from .rendezvous import Participant, RendezvousBroker
 from .memetic import MARVIN_BODEGA_CAT, MemeticProfile, humanize, unwrap
 from .openhome_bridge import OpenHomeBridge, make_openhome_bridge_server
 from .proximity import Pairing, PresenceBroker, sign_challenge

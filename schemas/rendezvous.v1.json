@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildinpublicuniversity.com/schemas/rendezvous.v1.json",
+  "title": "HumAIn Rendezvous",
+  "type": "object",
+  "required": ["schema", "rendezvous_id", "state", "requirements", "scope"],
+  "properties": {
+    "schema": {"const": "humain.rendezvous.v1"},
+    "rendezvous_id": {"type": "string", "minLength": 3},
+    "state": {"enum": ["pending", "claims_partial", "mutual_rendezvous"]},
+    "requirements": {
+      "type": "object",
+      "required": ["browser_claim", "openhome_claim", "browser_ping", "openhome_ping", "shared_receipt", "human_binding"],
+      "properties": {
+        "browser_claim": {"type": "boolean"},
+        "openhome_claim": {"type": "boolean"},
+        "browser_ping": {"type": "boolean"},
+        "openhome_ping": {"type": "boolean"},
+        "shared_receipt": {"type": "boolean"},
+        "human_binding": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": ["origin", "pathname"],
+      "properties": {
+        "origin": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "pathname": {"type": "string", "pattern": "^/[^?#]*$"},
+        "action": {"const": "speak_public_greeting"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "humain.rendezvous.v1",
+  "rendezvous_id": "rv_fixture_01",
+  "state": "mutual_rendezvous",
+  "requirements": {
+    "browser_claim": true,
+    "openhome_claim": true,
+    "browser_ping": true,
+    "openhome_ping": true,
+    "shared_receipt": true,
+    "human_binding": true
+  },
+  "scope": {
+    "origin": "https://story.markets",
+    "pathname": "/",
+    "action": "speak_public_greeting"
+  }
+}
