@@ -7,6 +7,7 @@ single-use public-only grant is issued.
 """
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -58,6 +59,7 @@ class RendezvousSession:
     openhome: Participant
     browser_nonce: str
     openhome_nonce: str
+    observation_key_b64: str
     binding_code_hash: str
     expires_at: datetime
     state: str = "pending"
@@ -104,6 +106,7 @@ class RendezvousBroker:
             openhome=openhome,
             browser_nonce=_token("bn"),
             openhome_nonce=_token("on"),
+            observation_key_b64=base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii").rstrip("="),
             binding_code_hash=hashlib.sha256(binding_code.encode("ascii")).hexdigest(),
             expires_at=now + timedelta(seconds=self.ttl_seconds),
         )
@@ -113,6 +116,7 @@ class RendezvousBroker:
             "rendezvous_id": rendezvous_id,
             "browser_challenge": session.browser_nonce,
             "openhome_challenge": session.openhome_nonce,
+            "observation_key_b64": session.observation_key_b64,
             "binding_code": binding_code,
             "scope": {"origin": origin, "pathname": pathname, "action": "speak_public_greeting"},
             "expires_at": _iso(session.expires_at),
@@ -131,6 +135,7 @@ class RendezvousBroker:
                 "schema": SCHEMA,
                 "rendezvous_id": session.rendezvous_id,
                 "openhome_challenge": session.openhome_nonce,
+                "observation_key_b64": session.observation_key_b64,
                 "scope": {"origin": session.origin, "pathname": session.pathname, "event_id": session.event_id},
                 "shared_receipt_hash": session.shared_receipt_hash,
                 "expires_at": _iso(session.expires_at),

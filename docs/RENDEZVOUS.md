@@ -48,7 +48,13 @@ This is corroboration, not proof of physical proximity. The stock DevKit still
 cannot produce `near_verified` without a signed runtime BLE challenge.
 
 
-The local bridge exposes the verifier under `/v1/rendezvous/`:
+The local bridge exposes the verifier under `/v1/rendezvous/`.
+
+Each rendezvous also receives a short-lived `observation_key_b64`. The browser
+start response and the OpenHome pending response contain the same key so both
+scanners can derive the same HMAC commitment. It expires with the rendezvous
+and is not a durable credential.
+
 
 ```text
 POST /start
