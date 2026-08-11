@@ -114,6 +114,25 @@ class RendezvousBroker:
             "expires_at": _iso(session.expires_at),
         }
 
+    def pending_for_openhome(self, key_ref: str) -> list[dict[str, Any]]:
+        if not key_ref:
+            return []
+        pending = []
+        for session in self.sessions.values():
+            if session.openhome.key_ref != key_ref:
+                continue
+            if self.now() >= session.expires_at or session.used or session.openhome_claim:
+                continue
+            pending.append({
+                "schema": SCHEMA,
+                "rendezvous_id": session.rendezvous_id,
+                "openhome_challenge": session.openhome_nonce,
+                "scope": {"origin": session.origin, "pathname": session.pathname, "event_id": session.event_id},
+                "shared_receipt_hash": session.shared_receipt_hash,
+                "expires_at": _iso(session.expires_at),
+            })
+        return pending
+
     def _session(self, rendezvous_id: str) -> RendezvousSession:
         session = self.sessions.get(rendezvous_id)
         if not session or self.now() >= session.expires_at:

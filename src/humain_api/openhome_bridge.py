@@ -15,6 +15,7 @@ import json
 from typing import Any
 
 from .memetic import humanize
+from .rendezvous import Participant, RendezvousBroker
 
 SCHEMA = "humain.openhome.context-event.v1"
 SPEECH_SCHEMA = "humain.openhome.speech-envelope.v1"
@@ -66,15 +67,54 @@ class DemoArm:
 
 
 class OpenHomeBridge:
-    def __init__(self, *, max_ttl_seconds: int = 900, debounce_seconds: int = 30, require_presence: bool = True):
+    def __init__(self, *, max_ttl_seconds: int = 900, debounce_seconds: int = 30, require_presence: bool = True, openhome_identity: Participant | None = None):
         self.max_ttl_seconds = max_ttl_seconds
         self.debounce_seconds = debounce_seconds
         self.require_presence = require_presence
+        self.openhome_identity = openhome_identity
         self.arm_state: DemoArm | None = None
         self.presence: dict[str, Any] | None = None
         self.seen_events: dict[str, datetime] = {}
         self.last_pointer: tuple[str, datetime] | None = None
         self.queue: list[dict[str, Any]] = []
+        self.rendezvous = RendezvousBroker()
+
+    def start_rendezvous(self, data: dict[str, Any]) -> dict[str, Any]:
+        if not self.arm_state or not self.arm_state.active:
+            raise PermissionError("desk mode is not armed")
+        required = {"origin", "pathname", "event_id", "browser"}
+        missing = required - data.keys()
+        if missing:
+            raise ValueError(f"invalid rendezvous start: missing {sorted(missing)}")
+        if self.openhome_identity is None:
+            raise PermissionError("rendezvous_not_configured")
+        try:
+            browser = Participant("browser", str(data["browser"]["key_ref"]), str(data["browser"]["public_key_b64"]))
+        except (KeyError, TypeError):
+            raise ValueError("browser participant requires key_ref and public_key_b64")
+        return self.rendezvous.start(origin=str(data["origin"]), pathname=str(data["pathname"]), event_id=str(data["event_id"]), browser=browser, openhome=self.openhome_identity)
+
+    def rendezvous_action(self, action: str, data: dict[str, Any]) -> dict[str, Any]:
+        rendezvous_id = str(data.get("rendezvous_id", ""))
+        if action == "pending":
+            if not self.arm_state or not self.arm_state.active:
+                raise PermissionError("desk mode is not armed")
+            return {"schema": "humain.rendezvous.pending.v1", "rendezvous": self.rendezvous.pending_for_openhome(str(data.get("key_ref", "")))}
+        if action == "status":
+            return self.rendezvous.status(rendezvous_id)
+        if action == "ping":
+            return self.rendezvous.issue_ping(rendezvous_id)
+        if action == "claim":
+            return self.rendezvous.submit_claim(rendezvous_id=rendezvous_id, role=str(data.get("role", "")), nonce=str(data.get("nonce", "")), signature=data.get("signature") or {}, observed_at=str(data.get("observed_at", "")))
+        if action == "answer_ping":
+            return self.rendezvous.answer_ping(rendezvous_id=rendezvous_id, role=str(data.get("role", "")), ping_id=str(data.get("ping_id", "")), nonce=str(data.get("nonce", "")), signature=data.get("signature") or {}, observed_at=str(data.get("observed_at", "")))
+        if action == "receipt":
+            return self.rendezvous.submit_shared_receipt(rendezvous_id=rendezvous_id, role=str(data.get("role", "")), receipt_hash=str(data.get("receipt_hash", "")), signature=data.get("signature") or {})
+        if action == "bind":
+            return self.rendezvous.bind(rendezvous_id=rendezvous_id, binding_code=str(data.get("binding_code", "")))
+        if action == "grant":
+            return self.rendezvous.issue_grant(rendezvous_id)
+        raise ValueError("unknown rendezvous action")
 
     def arm(self, session_id: str, ttl_seconds: int = 300) -> dict[str, Any]:
         if not session_id or not isinstance(session_id, str):
@@ -193,6 +233,24 @@ class OpenHomeBridgeHandler(BaseHTTPRequestHandler):
                 self._json(200, self.bridge.update_presence(data))
             elif self.path == "/v1/openhome/context-event":
                 self._json(202, self.bridge.submit_event(data))
+            elif self.path == "/v1/rendezvous/start":
+                self._json(201, self.bridge.start_rendezvous(data))
+            elif self.path == "/v1/rendezvous/pending":
+                self._json(200, self.bridge.rendezvous_action("pending", data))
+            elif self.path == "/v1/rendezvous/status":
+                self._json(200, self.bridge.rendezvous_action("status", data))
+            elif self.path == "/v1/rendezvous/ping":
+                self._json(200, self.bridge.rendezvous_action("ping", data))
+            elif self.path == "/v1/rendezvous/claim":
+                self._json(200, self.bridge.rendezvous_action("claim", data))
+            elif self.path == "/v1/rendezvous/answer-ping":
+                self._json(200, self.bridge.rendezvous_action("answer_ping", data))
+            elif self.path == "/v1/rendezvous/receipt":
+                self._json(200, self.bridge.rendezvous_action("receipt", data))
+            elif self.path == "/v1/rendezvous/bind":
+                self._json(200, self.bridge.rendezvous_action("bind", data))
+            elif self.path == "/v1/rendezvous/grant":
+                self._json(200, self.bridge.rendezvous_action("grant", data))
             else:
                 self._json(404, {"error": "not_found"})
         except PermissionError as exc:

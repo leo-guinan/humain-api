@@ -29,7 +29,38 @@ browser signature
   public URL or stable user identifier.
 - The resulting grant is single-use, public-only, and action-scoped.
 
-## Shared history
+## Adapter endpoints
+
+The local bridge exposes the verifier under `/v1/rendezvous/`:
+
+```text
+POST /start
+POST /pending
+POST /claim
+POST /ping
+POST /answer-ping
+POST /receipt
+POST /bind
+POST /grant
+```
+
+The bridge must be started with the OpenHome public identity provisioned out of
+band:
+
+```bash
+export HUMAIN_OPENHOME_KEY_REF=openhome:device-name
+export HUMAIN_OPENHOME_PUBLIC_KEY_B64='...public-key-only...'
+PYTHONPATH=src python3 run_openhome_bridge.py
+```
+
+The browser extension stores only `HUMAIN_OPENHOME_KEY_REF` in its local
+configuration. The OpenHome private key remains on the OpenHome/DevKit side and
+is used by `clients/rendezvous_client.py` or a Local Ability adapter to sign
+claims, pings, and the shared receipt.
+
+The browser never submits an OpenHome public key to `/start`. If the bridge has
+no provisioned OpenHome identity, `/start` returns `rendezvous_not_configured`.
+
 
 The protocol challenges receipt hashes, not semantic questions about a user's
 recent behavior. A receipt can prove both parties know the same protocol event

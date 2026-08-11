@@ -6,6 +6,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from humain_api.openhome_bridge import OpenHomeBridge, SCHEMA
+from humain_api.crypto import Ed25519Signer
+from humain_api.rendezvous import Participant
 
 
 def context_event(event_id="evt-1", pointer="https://story.markets/"):
@@ -74,6 +76,22 @@ class OpenHomeBridgeTests(unittest.TestCase):
         bridge.next_message()
         self.assertEqual(bridge.submit_event(context_event("evt-2"))["status"], "debounced")
         self.assertEqual(bridge.next_message()["status"], "empty")
+
+    def test_rendezvous_requires_server_provisioned_openhome_identity(self):
+        browser = Ed25519Signer.generate("browser:test")
+        bridge = OpenHomeBridge()
+        bridge.arm("desk-demo")
+        request = {"origin": "https://story.markets", "pathname": "/", "event_id": "evt-rv", "browser": {"key_ref": browser.key_ref, "public_key_b64": browser.public_key_b64}, "openhome": {"key_ref": "attacker", "public_key_b64": browser.public_key_b64}}
+        with self.assertRaises(PermissionError):
+            bridge.start_rendezvous(request)
+
+        device = Ed25519Signer.generate("openhome:test")
+        configured = OpenHomeBridge(openhome_identity=Participant("openhome", device.key_ref, device.public_key_b64))
+        configured.arm("desk-demo")
+        started = configured.start_rendezvous({"origin": "https://story.markets", "pathname": "/", "event_id": "evt-rv", "browser": {"key_ref": browser.key_ref, "public_key_b64": browser.public_key_b64}})
+        self.assertEqual(started["scope"]["origin"], "https://story.markets")
+        pending = configured.rendezvous_action("pending", {"key_ref": device.key_ref})
+        self.assertEqual(len(pending["rendezvous"]), 1)
 
     def test_mute_stops_delivery(self):
         bridge = OpenHomeBridge()
