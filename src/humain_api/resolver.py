@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable
 
 from .canonical import content_hash
+from .capability import CapabilityRegistry
 from .crypto import Ed25519Signer
 from .models import ResolutionRequest, ValidationError
 
@@ -15,10 +16,12 @@ class Resolver:
         publisher: str,
         verify_signature: Callable[..., bool] | None = None,
         response_signer: Ed25519Signer | None = None,
+        capability_registry: CapabilityRegistry | None = None,
     ):
         self.publisher = publisher
         self.verify_signature = verify_signature or (lambda _value, signature: signature.get("algorithm") != "demo")
         self.response_signer = response_signer
+        self.capability_registry = capability_registry
         self._seen_nonces: set[tuple[str, str]] = set()
         self._revoked: set[str] = set()
 
@@ -35,10 +38,13 @@ class Resolver:
             raise ValidationError("request signature was not verified")
         now = datetime.now(timezone.utc)
         allowed = any(
-            cap.capability_id not in self._revoked and cap.allows(
+            (self.capability_registry is None or self.capability_registry.verify({"schema": "humain.capability.v1", **{key: item for key, item in cap.__dict__.items() if item is not None}}))
+            and cap.capability_id not in self._revoked
+            and cap.allows(
                 requester=request.requester, audience=request.audience,
                 pointer=request.pointer, action=request.action, now=now
-            ) for cap in request.capabilities
+            )
+            for cap in request.capabilities
         )
         if not allowed:
             return self._response(request, "denied", {}, "no matching active capability")
@@ -84,9 +90,15 @@ def verify_request_signature(verifier: Callable[..., bool], request: ResolutionR
 
 
 def request_data_without_signature(request: ResolutionRequest) -> dict[str, Any]:
+    capabilities = []
+    for cap in request.capabilities:
+        value = {key: item for key, item in cap.__dict__.items() if item is not None}
+        if cap.signature is not None:
+            value = {"schema": "humain.capability.v1", **value}
+        capabilities.append(value)
     return {
         "schema": request.schema, "message_id": request.message_id, "pointer": request.pointer,
         "requester": request.requester, "audience": request.audience, "action": request.action,
         "nonce": request.nonce, "created_at": request.created_at,
-        "capabilities": [cap.__dict__ for cap in request.capabilities],
+        "capabilities": capabilities,
     }

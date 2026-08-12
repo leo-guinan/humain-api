@@ -34,6 +34,7 @@ class Capability:
     issued_at: str
     expires_at: str
     revoked: bool = False
+    signature: dict[str, Any] | None = None
 
     def allows(self, *, requester: str, audience: str, pointer: str, action: str, now: datetime) -> bool:
         if self.revoked or self.subject != requester or self.audience != audience:
@@ -67,5 +68,8 @@ class ResolutionRequest:
         if not valid_pointer(data["pointer"]):
             raise ValidationError("pointer must be an absolute HTTP(S) URL")
         parse_time(data["created_at"])
-        capabilities = tuple(Capability(**item) for item in data["capabilities"])
+        capabilities = tuple(
+            Capability(**{key: item[key] for key in Capability.__dataclass_fields__ if key != "signature"}, signature=item.get("signature"))
+            for item in data["capabilities"]
+        )
         return cls(capabilities=capabilities, **{k: data[k] for k in required - {"capabilities"}})

@@ -10,7 +10,8 @@ The first roadmap slice is implemented locally:
 - resolver responses can be signed with an `Ed25519Signer`;
 - an independent verifier test accepts an untampered response and rejects a changed payload;
 - demo response signatures remain available only as an explicit reference-mode fallback;
-- the local suite now has 39 passing tests.
+- the local suite now has 42 passing tests;
+- signed capability issuance and resolver-side issuer registry are implemented locally;
 
 This is an adapter-level hardening step, not production key management. There is still no durable key registry, issuer authority, rotation/revocation service, or production-mode refusal tied to deployment configuration.
 

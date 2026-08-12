@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildinpublicuniversity.com/humain-api/schemas/capability.v1.json",
+  "title": "HumAIn Signed Capability v1",
+  "type": "object",
+  "required": ["schema", "capability_id", "issuer", "subject", "audience", "pointer", "action", "issued_at", "expires_at", "revoked", "signature"],
+  "properties": {
+    "schema": {"const": "humain.capability.v1"},
+    "capability_id": {"type": "string", "minLength": 1},
+    "issuer": {"type": "string", "minLength": 1},
+    "subject": {"type": "string", "minLength": 1},
+    "audience": {"type": "string", "minLength": 1},
+    "pointer": {"type": "string", "format": "uri"},
+    "action": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "revoked": {"type": "boolean"},
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "key_ref", "value"],
+      "properties": {
+        "algorithm": {"const": "ed25519"},
+        "key_ref": {"type": "string", "minLength": 1},
+        "value": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
