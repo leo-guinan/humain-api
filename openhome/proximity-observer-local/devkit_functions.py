@@ -12,6 +12,8 @@ try:
     from devkit_utils.devkit_logging import web_logger as log
 except ImportError:
     class _Log:
+        def info(self, *_args, **_kwargs):
+            pass
         def exception(self, *_args, **_kwargs):
             pass
     log = _Log()
@@ -85,6 +87,7 @@ def _config(args=None):
 
 def scan_pending(*args):
     """Scan only pending rendezvous for this enrolled OpenHome key reference."""
+    log.info("[humain-proximity-local] scan_pending entered")
     try:
         relay, key_ref, service_uuid, token = _config(args)
         pending = _post(relay + "/v1/rendezvous/pending", {"key_ref": key_ref}, token).get("rendezvous", [])
@@ -97,6 +100,7 @@ def scan_pending(*args):
                 result = _post(relay + "/v1/rendezvous/observation", {"rendezvous_id": item["rendezvous_id"], "scanner": "openhome", "observed_at": _now(), **match}, token)
                 submitted.append({"rendezvous_id": item["rendezvous_id"], "commitment_quality": match["commitment_quality"], "status": result.get("state", "submitted")})
         payload = {"success": True, "schema": "humain.rendezvous.devkit-observation.v1", "pending_count": len(pending), "submitted": submitted, "private_context": False, "raw_devices": False, "error": None}
+        log.info("[humain-proximity-local] bounded scan completed")
     except Exception as error:
         log.exception("scan_pending failed")
         payload = {"success": False, "schema": "humain.rendezvous.devkit-observation.v1", "pending_count": 0, "submitted": [], "private_context": False, "raw_devices": False, "error": {"code": "devkit_scan_unavailable", "message": str(error)[:200]}}
@@ -110,4 +114,4 @@ if __name__ == "__main__":
     if function_name not in FUNCTION_REGISTRY:
         sys.stdout.write(json.dumps({"success": False, "error": {"code": "unknown_function"}}) + "\n")
         sys.exit(1)
-    FUNCTION_REGISTRY[function_name]()
+    FUNCTION_REGISTRY[function_name](*sys.argv[2:])

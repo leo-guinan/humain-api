@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 from .canonical import canonical_bytes
@@ -40,7 +41,7 @@ class Ed25519Signer:
         try:
             self.private_key.public_key().verify(_unb64(signature["value"]), canonical_bytes(value))
             return True
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, InvalidSignature):
             return False
 
 
@@ -57,5 +58,5 @@ class Ed25519Verifier:
         try:
             Ed25519PublicKey.from_public_bytes(_unb64(encoded)).verify(_unb64(signature["value"]), canonical_bytes(value))
             return True
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, InvalidSignature):
             return False

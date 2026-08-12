@@ -1,0 +1,4 @@
+{
+  "unique_name": "minimal-local-ping",
+  "matching_hotwords": ["devkit ping"]
+}

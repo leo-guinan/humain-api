@@ -1,6 +1,18 @@
 # HumAIn reliability roadmap
 
-Status: infrastructure audit, 2026-08-10
+Status: infrastructure audit, 2026-08-12; first signature-hardening slice implemented locally
+
+## Current implementation checkpoint (2026-08-12)
+
+The first roadmap slice is implemented locally:
+
+- request verification can use `Ed25519Verifier` over canonical request bytes;
+- resolver responses can be signed with an `Ed25519Signer`;
+- an independent verifier test accepts an untampered response and rejects a changed payload;
+- demo response signatures remain available only as an explicit reference-mode fallback;
+- the local suite now has 39 passing tests.
+
+This is an adapter-level hardening step, not production key management. There is still no durable key registry, issuer authority, rotation/revocation service, or production-mode refusal tied to deployment configuration.
 
 ## Executive assessment
 

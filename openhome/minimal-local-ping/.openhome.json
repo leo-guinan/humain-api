@@ -1,0 +1,9 @@
+{
+  "name": "Minimal Local Ping",
+  "capability_id": "8080",
+  "category": "local",
+  "description": "Clean-room OpenHome DevKit transport diagnostic.",
+  "trigger_words": [
+    "devkit ping"
+  ]
+}

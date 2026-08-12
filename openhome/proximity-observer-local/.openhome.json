@@ -1,0 +1,12 @@
+{
+  "capability_id": "8056",
+  "name": "HumAIn Proximity Local",
+  "category": "local",
+  "description": "Local OpenHome DevKit ability for bounded BLE observation and authenticated rendezvous reporting. No raw device data, identity promotion, or private context.",
+  "trigger_words": [
+    "humain proximity observer"
+  ],
+  "release_id": 18546,
+  "version": "v2",
+  "is_committed": false
+}

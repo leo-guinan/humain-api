@@ -2,15 +2,23 @@ from datetime import datetime, timezone
 from typing import Any, Callable
 
 from .canonical import content_hash
+from .crypto import Ed25519Signer
 from .models import ResolutionRequest, ValidationError
 
 
 class Resolver:
     """Local resolver core. Transport and cryptographic verification are adapters."""
 
-    def __init__(self, *, publisher: str, verify_signature: Callable[[dict[str, Any]], bool] | None = None):
+    def __init__(
+        self,
+        *,
+        publisher: str,
+        verify_signature: Callable[..., bool] | None = None,
+        response_signer: Ed25519Signer | None = None,
+    ):
         self.publisher = publisher
-        self.verify_signature = verify_signature or (lambda signature: signature.get("algorithm") != "demo")
+        self.verify_signature = verify_signature or (lambda _value, signature: signature.get("algorithm") != "demo")
+        self.response_signer = response_signer
         self._seen_nonces: set[tuple[str, str]] = set()
         self._revoked: set[str] = set()
 
@@ -53,9 +61,17 @@ class Resolver:
             },
             "permissions": {"action": request.action, "capability_checked": state == "trusted_projection"},
             "error": error,
-            "signature": {"algorithm": "demo", "key_ref": self.publisher, "value": "demo:unsigned"},
         }
+        response["signature"] = (
+            self.response_signer.sign(response_without_signature(response))
+            if self.response_signer is not None
+            else {"algorithm": "demo", "key_ref": self.publisher, "value": "demo:unsigned"}
+        )
         return response
+
+
+def response_without_signature(response: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in response.items() if key != "signature"}
 
 
 def verify_request_signature(verifier: Callable[..., bool], request: ResolutionRequest, signature: dict[str, Any]) -> bool:

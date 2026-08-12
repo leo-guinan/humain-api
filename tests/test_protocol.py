@@ -90,6 +90,29 @@ class ProtocolTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
+    def test_signed_ed25519_response_verifies_independently(self):
+        agent_signer = Ed25519Signer.generate("did:key:agent")
+        publisher_signer = Ed25519Signer.generate("did:key:publisher")
+        request = dict(self.request)
+        request["nonce"] = "signed-response-nonce"
+        unsigned = {k: request[k] for k in request if k != "signature"}
+        request["signature"] = agent_signer.sign(unsigned)
+        resolver = Resolver(
+            publisher="did:key:publisher",
+            verify_signature=Ed25519Verifier({"did:key:agent": agent_signer.public_key_b64}),
+            response_signer=publisher_signer,
+        )
+        response = resolver.resolve(request, {"message": "signed"})
+        self.assertEqual(response["signature"]["algorithm"], "ed25519")
+        self.assertTrue(Ed25519Verifier({"did:key:publisher": publisher_signer.public_key_b64})(
+            {k: response[k] for k in response if k != "signature"}, response["signature"]
+        ))
+        tampered = dict(response)
+        tampered["payload"] = {"message": "tampered"}
+        self.assertFalse(Ed25519Verifier({"did:key:publisher": publisher_signer.public_key_b64})(
+            {k: tampered[k] for k in tampered if k != "signature"}, tampered["signature"]
+        ))
+
     def test_memetic_layer_preserves_state_and_unwraps_exact_response(self):
         response = {
             "resolution_state": "denied",
