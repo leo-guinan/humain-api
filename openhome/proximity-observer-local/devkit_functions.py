@@ -82,14 +82,38 @@ def _config(args=None):
     token = os.environ.get("HUMAIN_RENDEZVOUS_AUTH_TOKEN", "")
     if not relay or not key_ref or not token:
         raise RuntimeError("rendezvous URL, DevKit runtime auth token, and OpenHome key reference are required")
-    return relay, key_ref, service_uuid, token
+    run_id = args[3] if len(args) > 3 else "devkit_manual"
+    return relay, key_ref, service_uuid, token, run_id
+
+
+def _event(relay, token, run_id, stage, status, detail=None):
+    try:
+        _post(
+            relay + "/v1/observability/events",
+            {
+                "run_id": run_id,
+                "source": "devkit",
+                "stage": stage,
+                "status": status,
+                "ability": "HumAIn Proximity Local",
+                "function": "scan_pending",
+                "detail": detail or {},
+            },
+            token,
+        )
+    except Exception as error:
+        log.info("[humain-proximity-local] observability unavailable: %s", type(error).__name__)
 
 
 def scan_pending(*args):
     """Scan only pending rendezvous for this enrolled OpenHome key reference."""
     log.info("[humain-proximity-local] scan_pending entered")
+    relay = ""
+    token = ""
+    run_id = "devkit_manual"
     try:
-        relay, key_ref, service_uuid, token = _config(args)
+        relay, key_ref, service_uuid, token, run_id = _config(args)
+        _event(relay, token, run_id, "devkit_function", "entered")
         pending = _post(relay + "/v1/rendezvous/pending", {"key_ref": key_ref}, token).get("rendezvous", [])
         submitted = []
         for item in pending[:3]:
@@ -101,9 +125,12 @@ def scan_pending(*args):
                 submitted.append({"rendezvous_id": item["rendezvous_id"], "commitment_quality": match["commitment_quality"], "status": result.get("state", "submitted")})
         payload = {"success": True, "schema": "humain.rendezvous.devkit-observation.v1", "pending_count": len(pending), "submitted": submitted, "private_context": False, "raw_devices": False, "error": None}
         log.info("[humain-proximity-local] bounded scan completed")
+        _event(relay, token, run_id, "devkit_function", "completed", {"pending_count": len(pending), "submitted_count": len(submitted)})
     except Exception as error:
         log.exception("scan_pending failed")
         payload = {"success": False, "schema": "humain.rendezvous.devkit-observation.v1", "pending_count": 0, "submitted": [], "private_context": False, "raw_devices": False, "error": {"code": "devkit_scan_unavailable", "message": str(error)[:200]}}
+        if relay and token:
+            _event(relay, token, run_id, "devkit_function", "failed", {"error_type": type(error).__name__})
     sys.stdout.write(json.dumps(payload, separators=(",", ":")) + "\n")
 
 

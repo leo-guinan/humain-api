@@ -1,0 +1,12 @@
+{
+  "name": "Boot Sequence Baseline",
+  "capability_id": "8087",
+  "category": "skill",
+  "description": "Minimal cloud-side capability for diagnosing OpenHome trigger routing and Live Editor logs.",
+  "trigger_words": [
+    "baseline ping"
+  ],
+  "release_id": 18563,
+  "version": "v2",
+  "is_committed": false
+}

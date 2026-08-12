@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from humain_api.rendezvous import Participant, RendezvousBroker
+from relay.observability import EventLedger
 
 app = FastAPI(title="HumAIn Rendezvous Relay", version="1.0")
 app.add_middleware(
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 BROKER = RendezvousBroker(require_observation=True)
+EVENTS = EventLedger(path=os.environ.get("HUMAIN_OBSERVABILITY_PATH", ""))
 
 
 def _openhome() -> Participant | None:
@@ -54,6 +56,31 @@ async def _body(request: Request) -> dict[str, Any]:
 @app.get("/health")
 def health():
     return {"ok": True, "service": "humain-rendezvous-relay", "openhome_identity_configured": _openhome() is not None, "private_context": False}
+
+
+@app.post("/v1/observability/events")
+async def observability_event(request: Request):
+    if not _authorized(request):
+        return _error(401, "unauthorized", "Observability authorization required")
+    try:
+        data = await _body(request)
+        if not data.get("run_id") or not data.get("source") or not data.get("stage"):
+            return _error(400, "invalid_observability_event", "run_id, source, and stage are required")
+        return {"schema": "humain.observability.event.v1", "event": EVENTS.append(data)}
+    except Exception as exc:
+        return _error(400, "invalid_observability_event", str(exc))
+
+
+@app.get("/v1/observability/events")
+async def recent_observability_events(request: Request):
+    if not _authorized(request):
+        return _error(401, "unauthorized", "Observability authorization required")
+    run_id = request.query_params.get("run_id", "")
+    try:
+        limit = int(request.query_params.get("limit", "100"))
+    except ValueError:
+        limit = 100
+    return {"schema": "humain.observability.events.v1", "events": EVENTS.recent(run_id, limit)}
 
 
 @app.post("/v1/rendezvous/start")

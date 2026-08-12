@@ -1,6 +1,7 @@
 from src.agent.capability import MatchingCapability
 from src.main import AgentWorker
 from src.agent.capability_worker import CapabilityWorker
+import uuid
 
 RELAY_KEY = "humain_rendezvous_url"
 TOKEN_KEY = "humain_rendezvous_auth_token"
@@ -23,7 +24,9 @@ class HumAInContextBootstrapCapability(MatchingCapability):
         self.worker.session_tasks.create(self.run())
 
     async def run(self):
+        run_id = "openhome_" + uuid.uuid4().hex[:16]
         try:
+            self.worker.editor_logging_handler.info("[humain-context-bootstrap] run=%s entered" % run_id)
             relay_url = self.capability_worker.get_api_keys(RELAY_KEY) or ""
             auth_token = self.capability_worker.get_api_keys(TOKEN_KEY) or ""
             key_ref = self.capability_worker.get_api_keys(KEY_REF_KEY) or "openhome:marvin-bodega"
@@ -45,7 +48,7 @@ class HumAInContextBootstrapCapability(MatchingCapability):
 
             result = await self.capability_worker.send_devkit_capability_action(
                 function_name="scan_pending",
-                args=[relay_url, key_ref, SERVICE_UUID],
+                args=[relay_url, key_ref, SERVICE_UUID, run_id],
                 capability_name=OBSERVER_NAME,
                 timeout=10,
             )
@@ -62,4 +65,5 @@ class HumAInContextBootstrapCapability(MatchingCapability):
                 "[humain-context-bootstrap] bootstrap failed: %s" % exc
             )
         finally:
+            self.worker.editor_logging_handler.info("[humain-context-bootstrap] run=%s exiting" % run_id)
             self.capability_worker.resume_normal_flow()

@@ -92,6 +92,41 @@ The first public-only demo line is equivalent to:
 
 The envelope carries the underlying response and provenance for a receipt view. The voice surface is not the evidence surface.
 
+## Ordered observability ledger
+
+The relay also exposes an authenticated, redacted event ledger for correlating
+the parts of the demo that are outside the same log panel:
+
+```text
+POST /v1/observability/events
+GET  /v1/observability/events?run_id=...
+```
+
+The Bootstrap ability creates a short-lived `run_id` and passes it to the
+DevKit Local function. The DevKit reports only bounded lifecycle events such as
+function entry, completion, failure type, pending count, and submitted count.
+It does not report speech text, browser content, BLE addresses, bearer tokens,
+or private resolver state.
+
+The endpoint requires the same bearer token as the DevKit rendezvous routes.
+Set `HUMAIN_OBSERVABILITY_PATH` on the relay to append newline-delimited JSON
+events to a local file; without it, recent events remain in a bounded in-memory
+ledger. This change is implemented locally and is not deployed to the VPS by
+default.
+
+The ledger can prove:
+
+```text
+Bootstrap run created
+→ DevKit function entered
+→ DevKit function completed/failed
+→ bounded result counts
+```
+
+It cannot prove that OpenHome's provider-side trigger classifier considered or
+rejected an utterance. If no Bootstrap log appears, that remains a provider
+routing/session observation rather than a HumAIn relay observation.
+
 ## OpenHome setup
 
 The reusable presence capability package is available at `openhome/proximity-presence.zip`. Other OpenHome abilities can call its `get_presence` DevKit function without implementing BLE or handling paired identifiers.
