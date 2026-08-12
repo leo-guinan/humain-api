@@ -152,5 +152,33 @@ class ProtocolTests(unittest.TestCase):
         request = dict(self.request, signature={"algorithm": "demo", "key_ref": "x", "value": "demo:unsigned"})
         with self.assertRaises(ValidationError): Resolver(publisher="did:key:z6MkPublisher").resolve(request, {})
 
+    def test_production_mode_refuses_demo_configuration(self):
+        with self.assertRaises(ValueError):
+            Resolver(publisher="did:key:publisher", mode="production")
+
+    def test_production_mode_requires_real_response_signer(self):
+        agent = Ed25519Signer.generate("did:key:agent")
+        with self.assertRaises(ValueError):
+            Resolver(
+                publisher="did:key:publisher",
+                mode="production",
+                verify_signature=Ed25519Verifier({"did:key:agent": agent.public_key_b64}),
+            )
+
+    def test_production_mode_emits_no_demo_signature(self):
+        agent = Ed25519Signer.generate("did:key:agent")
+        publisher = Ed25519Signer.generate("did:key:publisher")
+        request = dict(self.request, nonce="production-response-nonce")
+        request["signature"] = agent.sign({k: request[k] for k in request if k != "signature"})
+        resolver = Resolver(
+            publisher="did:key:publisher",
+            mode="production",
+            verify_signature=Ed25519Verifier({"did:key:agent": agent.public_key_b64}),
+            response_signer=publisher,
+        )
+        response = resolver.resolve(request, {})
+        self.assertEqual(response["signature"]["algorithm"], "ed25519")
+        self.assertNotEqual(response["signature"].get("value"), "demo:unsigned")
+
 
 if __name__ == "__main__": unittest.main()

@@ -31,6 +31,7 @@ Implemented and locally verified:
 - Ed25519 signing and verification adapters;
 - optional real Ed25519 response signing in the resolver;
 - signed capability issuance and resolver-side issuer registry;
+- explicit `Resolver(mode="production")` refuses demo/reference signing configuration;
 - local HTTP `/health` and `/v1/resolve` transport;
 - capability matching with expiry, audience, pointer, action, and revocation checks;
 - append-only parent/hash linkage validation;
@@ -88,6 +89,7 @@ See `docs/OPENHOME-DEMO.md` before attempting a physical-device run. The physica
 
 - [`docs/PROTOCOL.md`](docs/PROTOCOL.md) — normative v0.1 protocol draft.
 - [`docs/CAPABILITY-AUTHORITY.md`](docs/CAPABILITY-AUTHORITY.md) — signed capability issuance and registry boundary.
+- [`docs/RESOLVER-MODES.md`](docs/RESOLVER-MODES.md) — reference versus production construction rules.
 - [`docs/SECURITY.md`](docs/SECURITY.md) — threat model and boundaries.
 - [`docs/RELIABILITY-ROADMAP.md`](docs/RELIABILITY-ROADMAP.md) — pilot gates and production hardening order.
 - [`docs/CLIENTS.md`](docs/CLIENTS.md) — browser extension, agent resolver, and voice client contracts.

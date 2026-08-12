@@ -12,8 +12,9 @@ The first roadmap slice is implemented locally:
 - demo response signatures remain available only as an explicit reference-mode fallback;
 - the local suite now has 42 passing tests;
 - signed capability issuance and resolver-side issuer registry are implemented locally;
+- `Resolver(mode="production")` refuses to start without real request verification and response signing;
 
-This is an adapter-level hardening step, not production key management. There is still no durable key registry, issuer authority, rotation/revocation service, or production-mode refusal tied to deployment configuration.
+This is an adapter-level hardening step, not production key management. There is still no durable key registry, issuer authority, rotation/revocation service, or deployment-level configuration loader that selects production mode automatically.
 
 ## Executive assessment
 

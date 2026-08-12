@@ -17,7 +17,13 @@ class Resolver:
         verify_signature: Callable[..., bool] | None = None,
         response_signer: Ed25519Signer | None = None,
         capability_registry: CapabilityRegistry | None = None,
+        mode: str = "reference",
     ):
+        if mode not in {"reference", "production"}:
+            raise ValueError("mode must be 'reference' or 'production'")
+        if mode == "production" and (verify_signature is None or response_signer is None):
+            raise ValueError("production mode requires real request verification and response signing")
+        self.mode = mode
         self.publisher = publisher
         self.verify_signature = verify_signature or (lambda _value, signature: signature.get("algorithm") != "demo")
         self.response_signer = response_signer
