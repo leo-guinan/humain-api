@@ -1,0 +1,20 @@
+{
+  "schema": "humain.deployment-verification.v1",
+  "target": "local-loopback",
+  "commit": "2c064e1a0e79a9ff47cd8fc014909392b80f1060",
+  "server": "uvicorn run_fastapi:app --host 127.0.0.1 --port 18787 --workers 1",
+  "checks": {
+    "startup": "PASS",
+    "healthz": {"status": 200, "ok": true},
+    "readyz": {"status": 200, "ok": true, "mode": "production"},
+    "invalid_resolve": {"status": 400, "request_id_preserved": true},
+    "systemd_template": "PASS",
+    "production_missing_secrets_fails_closed": "PASS",
+    "ephemeral_state_cleanup": "PASS",
+    "pytest": "56 passed, 1 warning",
+    "unittest": "55 passed",
+    "examples": 8,
+    "diff_check": "PASS"
+  },
+  "scope_boundary": "No VPS, TLS proxy, DNS, or real systemd service was modified or claimed."
+}

@@ -35,6 +35,7 @@ Implemented and locally verified:
 - optional `SQLiteStateStore` proves restart-safe nonces, revocations, and receipts locally;
 - local HTTP `/healthz`, `/readyz`, and `/v1/resolve` transport with request IDs and body limits;
 - maintained FastAPI/uvicorn adapter with a loopback-oriented systemd template;
+- local loopback deployment verification receipt covers startup, `/healthz`, `/readyz`, fail-closed production configuration, and cleanup; no VPS deployment is claimed;
 - capability matching with expiry, audience, pointer, action, and revocation checks;
 - append-only parent/hash linkage validation;
 - explicit open/closed receipt shape;
