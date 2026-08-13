@@ -96,8 +96,7 @@ For the first pilot, a single PostgreSQL instance with encrypted backups is suff
 
 ### 4. Replace the reference HTTP server
 
-Current boundary: `ThreadingHTTPServer` has no TLS, request-size limit, structured access logs, graceful deployment contract, or production health model.
-
+Current boundary: the resolver adapter now has `/healthz`, `/readyz`, request IDs, and body-size rejection. It still uses `ThreadingHTTPServer` and does not yet provide TLS, header/timeouts, rate limiting, graceful draining, or deployment health gates.
 Required:
 
 - FastAPI/uvicorn or another maintained HTTP stack;
