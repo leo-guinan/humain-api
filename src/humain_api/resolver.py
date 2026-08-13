@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
 from typing import Any, Callable
+import uuid
 
 from .canonical import content_hash
 from .capability import CapabilityRegistry
 from .crypto import Ed25519Signer
 from .models import ResolutionRequest, ValidationError
+from .state import SQLiteStateStore
 
 
 class Resolver:
@@ -18,6 +20,7 @@ class Resolver:
         response_signer: Ed25519Signer | None = None,
         capability_registry: CapabilityRegistry | None = None,
         mode: str = "reference",
+        state_store: SQLiteStateStore | None = None,
     ):
         if mode not in {"reference", "production"}:
             raise ValueError("mode must be 'reference' or 'production'")
@@ -28,23 +31,31 @@ class Resolver:
         self.verify_signature = verify_signature or (lambda _value, signature: signature.get("algorithm") != "demo")
         self.response_signer = response_signer
         self.capability_registry = capability_registry
+        self.state_store = state_store
         self._seen_nonces: set[tuple[str, str]] = set()
         self._revoked: set[str] = set()
 
     def revoke(self, capability_id: str) -> None:
-        self._revoked.add(capability_id)
+        if self.state_store is not None:
+            self.state_store.revoke(capability_id)
+        else:
+            self._revoked.add(capability_id)
 
     def resolve(self, request_data: dict[str, Any], projection: dict[str, Any]) -> dict[str, Any]:
         request = ResolutionRequest.from_dict(request_data)
-        nonce_key = (request.requester, request.nonce)
-        if nonce_key in self._seen_nonces:
-            raise ValidationError("replayed nonce")
-        self._seen_nonces.add(nonce_key)
         if not verify_request_signature(self.verify_signature, request, request.signature):
             raise ValidationError("request signature was not verified")
+        nonce_key = (request.requester, request.nonce)
+        if self.state_store is not None:
+            if not self.state_store.consume_nonce(request.requester, request.nonce):
+                raise ValidationError("replayed nonce")
+        elif nonce_key in self._seen_nonces:
+            raise ValidationError("replayed nonce")
+        self._seen_nonces.add(nonce_key)
         now = datetime.now(timezone.utc)
         allowed = any(
             (self.capability_registry is None or self.capability_registry.verify({"schema": "humain.capability.v1", **{key: item for key, item in cap.__dict__.items() if item is not None}}))
+            and not (self.state_store is not None and self.state_store.is_revoked(cap.capability_id))
             and cap.capability_id not in self._revoked
             and cap.allows(
                 requester=request.requester, audience=request.audience,
@@ -52,9 +63,20 @@ class Resolver:
             )
             for cap in request.capabilities
         )
-        if not allowed:
-            return self._response(request, "denied", {}, "no matching active capability")
-        return self._response(request, "trusted_projection", projection, None)
+        result = self._response(request, "denied", {}, "no matching active capability") if not allowed else self._response(request, "trusted_projection", projection, None)
+        if self.state_store is not None:
+            self.state_store.record_receipt({
+                "receipt_id": "receipt:" + uuid.uuid4().hex,
+                "requester": request.requester, "audience": request.audience,
+                "pointer": request.pointer,
+                "capability_ids": [cap.capability_id for cap in request.capabilities],
+                "resolution_state": result["resolution_state"],
+                "response_hash": content_hash(response_without_signature(result)),
+                "response_signature_ref": result["signature"].get("key_ref"),
+                "created_at": result["provenance"]["created_at"],
+                "response": result,
+            })
+        return result
 
     def _response(self, request: ResolutionRequest, state: str, payload: dict[str, Any], error: str | None) -> dict[str, Any]:
         response = {

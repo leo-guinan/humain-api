@@ -10,9 +10,10 @@ The first roadmap slice is implemented locally:
 - resolver responses can be signed with an `Ed25519Signer`;
 - an independent verifier test accepts an untampered response and rejects a changed payload;
 - demo response signatures remain available only as an explicit reference-mode fallback;
-- the local suite now has 42 passing tests;
+- the local suite now has 48 passing tests;
 - signed capability issuance and resolver-side issuer registry are implemented locally;
 - `Resolver(mode="production")` refuses to start without real request verification and response signing;
+- `SQLiteStateStore` proves restart-safe nonce, revocation, and receipt behavior locally; PostgreSQL remains the pilot requirement;
 
 This is an adapter-level hardening step, not production key management. There is still no durable key registry, issuer authority, rotation/revocation service, or deployment-level configuration loader that selects production mode automatically.
 

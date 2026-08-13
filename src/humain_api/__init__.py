@@ -11,7 +11,8 @@ from .openhome_bridge import OpenHomeBridge, make_openhome_bridge_server
 from .proximity import Pairing, PresenceBroker, sign_challenge
 from .receipt import Receipt
 from .resolver import Resolver
+from .state import SQLiteStateStore
 from .trajectory import TrajectoryCapsule, compare_trajectories, compress_events
 from .voice_service import VoiceToolService, make_voice_server
 
-__all__ = ["BleCandidate", "BleakDiscoveryAdapter", "Capability", "CapabilityIssuer", "CapabilityRegistry", "Ed25519Signer", "Ed25519Verifier", "MARVIN_BODEGA_CAT", "MemeticProfile", "OpenHomeBridge", "Pairing", "PresenceBroker", "Receipt", "ResolutionRequest", "Resolver", "TrajectoryCapsule", "ValidationError", "VoiceToolService", "canonical_bytes", "compare_trajectories", "compress_events", "content_hash", "humanize", "make_openhome_bridge_server", "make_voice_server", "sign_challenge", "unwrap"]
+__all__ = ["BleCandidate", "BleakDiscoveryAdapter", "Capability", "CapabilityIssuer", "CapabilityRegistry", "Ed25519Signer", "Ed25519Verifier", "MARVIN_BODEGA_CAT", "MemeticProfile", "OpenHomeBridge", "Pairing", "PresenceBroker", "Receipt", "ResolutionRequest", "Resolver", "SQLiteStateStore", "TrajectoryCapsule", "ValidationError", "VoiceToolService", "canonical_bytes", "compare_trajectories", "compress_events", "content_hash", "humanize", "make_openhome_bridge_server", "make_voice_server", "sign_challenge", "unwrap"]
