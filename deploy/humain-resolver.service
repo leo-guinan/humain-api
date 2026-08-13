@@ -1,0 +1,22 @@
+[Unit]
+Description=HumAIn resolver API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=humain
+Group=humain
+WorkingDirectory=/opt/humain-api/current
+EnvironmentFile=/etc/humain-api/resolver.env
+ExecStart=/opt/humain-api/venv/bin/uvicorn run_fastapi:app --host 127.0.0.1 --port 8787 --workers 2 --timeout-keep-alive 5
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/humain-api
+
+[Install]
+WantedBy=multi-user.target

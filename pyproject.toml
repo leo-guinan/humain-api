@@ -7,7 +7,7 @@ name = "humain-api"
 version = "0.1.0"
 description = "Transport-neutral primitives for trust-aware resolution of public pointers"
 requires-python = ">=3.10"
-dependencies = ["cryptography>=41"]
+dependencies = ["cryptography>=41", "fastapi>=0.110", "uvicorn>=0.29"]
 license = {text = "MIT"}
 
 [project.optional-dependencies]

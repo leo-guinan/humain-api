@@ -27,6 +27,10 @@ class Ed25519Signer:
     def generate(cls, key_ref: str) -> "Ed25519Signer":
         return cls(Ed25519PrivateKey.generate(), key_ref)
 
+    @classmethod
+    def from_private_key_b64(cls, key_ref: str, encoded: str) -> "Ed25519Signer":
+        return cls(Ed25519PrivateKey.from_private_bytes(_unb64(encoded)), key_ref)
+
     @property
     def public_key_b64(self) -> str:
         return _b64(self.private_key.public_key().public_bytes_raw())
